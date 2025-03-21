@@ -8,14 +8,14 @@ services:
     volumes:
       # - ./modpacks:/modpacks:ro
       - data:/data
-      - ./mods.txt:/extras/mods.txt:ro
+      # - ./mods.txt:/extras/mods.txt:ro
     stdin_open: true
     tty: true
     environment:
       EULA: "true"
       TYPE: FORGE
       VERSION: 1.21.4
-      # CF_SERVER_MOD: /modpacks/ATM7-0.4.32-server.zip
+      CF_SERVER_MOD: /modpacks/ATM7-0.4.32-server.zip
       MEMORY: "24G"
       ENABLE_ROLLING_LOGS: "true"
       TZ: "America/Chicago"
@@ -29,8 +29,8 @@ services:
       PVP: "true"
       LEVEL_TYPE: "biomesoplenty"
       MOTD: "Good luck"
-      MODS_FILE: /extras/mods.txt
-      REMOVE_OLD_MODS: "true"
+      # MODS_FILE: /extras/mods.txt
+      # REMOVE_OLD_MODS: "true"
 
 volumes:
   data:
