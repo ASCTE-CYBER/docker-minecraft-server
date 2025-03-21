@@ -13,7 +13,7 @@ services:
     tty: true
     environment:
       EULA: "true"
-      TYPE: CURSEFORGE
+      TYPE: MODRINTH
       VERSION: 1.21.4
       CF_SERVER_MOD: /modpacks/ServerFiles-2.41.zip
       MEMORY: "24G"
