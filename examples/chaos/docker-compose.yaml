@@ -13,7 +13,7 @@ services:
     tty: true
     environment:
       EULA: "true"
-      TYPE: CURSEFORGE
+      # TYPE: CURSEFORGE
       VERSION: 1.19.2
       # CF_SERVER_MOD: /modpacks/ATM7-0.4.32-server.zip
       MEMORY: "24G"
