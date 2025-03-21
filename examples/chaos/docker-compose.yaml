@@ -15,7 +15,7 @@ services:
       EULA: "true"
       TYPE: CURSEFORGE
       VERSION: 1.21.4
-      # CF_SERVER_MOD: /modpacks/ATM7-0.4.32-server.zip
+      CF_SERVER_MOD: /modpacks/ServerFiles-2.41.zip
       MEMORY: "24G"
       ENABLE_ROLLING_LOGS: "true"
       TZ: "America/Chicago"
