@@ -6,7 +6,7 @@ services:
       - 25565:25565
     restart: unless-stopped
     volumes:
-      # - ./modpacks:/modpacks:ro
+      - ./modpacks:/modpacks:ro
       - data:/data
       # - ./mods.txt:/extras/mods.txt:ro
     stdin_open: true
