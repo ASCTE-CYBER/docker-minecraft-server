@@ -79,10 +79,10 @@ https://edge.forgecdn.net/files/3211/10/supermartijn642configlib-1.0.5-mc1.15.ja
 https://edge.forgecdn.net/files/2995/786/TerraForged-1.15.2-0.0.15.jar
 https://edge.forgecdn.net/files/2892/562/leavesdecayonotherleaves-1.1.jar
 https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/weather2-1.20.1-2.8.3.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/ancientwarfare-1.12.2-2.7.0.1038.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/Thaumcraft-1.12.2-6.1.BETA26.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/ICBM-classic-1.12.2-6.4.1.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/EvenMoreTNT-1.0.1.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/EpicSiegeMod-13.169.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/iceandfire-2.1.13-1.20.1-beta-5.jar
-https://www.curseforge.com/minecraft/mc-mods/weather-storms-tornadoes/download/5244118/MegaMeteors 1.8.5 [1.19.2].jar
+https://www.curseforge.com/minecraft/mc-mods/ancient-warfare-2/download/3293318/ancientwarfare-1.12.2-2.7.0.1038.jar
+https://www.curseforge.com/minecraft/mc-mods/thaumcraft/download/2629023/Thaumcraft-1.12.2-6.1.BETA26.jar
+https://www.curseforge.com/minecraft/mc-mods/icbm/download/5770085/ICBM-classic-1.12.2-6.4.1.jar
+https://www.curseforge.com/minecraft/mc-mods/even-more-tnt/download/2709887/EvenMoreTNT-1.0.1.jar
+https://www.curseforge.com/minecraft/mc-mods/epic-siege-mod/download/3356157/EpicSiegeMod-13.169.jar
+https://www.curseforge.com/minecraft/mc-mods/ice-and-fire-dragons/download/5633453/iceandfire-2.1.13-1.20.1-beta-5.jar
+https://www.curseforge.com/minecraft/mc-mods/mega-meteors-mod/download/6271344/MegaMeteors 1.8.5 [1.19.2].jar
