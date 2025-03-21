@@ -1,20 +1,21 @@
 services:
   mc_atm7:
     image: itzg/minecraft-server
-    container_name: mc_atm7
+    container_name: minecraft-chaos
     ports:
       - 25565:25565
     restart: unless-stopped
     volumes:
-      - ./modpacks:/modpacks:ro
+      # - ./modpacks:/modpacks:ro
       - data:/data
+      - ./mods.txt:/extras/mods.txt:ro
     stdin_open: true
     tty: true
     environment:
       EULA: "true"
       TYPE: CURSEFORGE
       VERSION: 1.19.2
-      CF_SERVER_MOD: /modpacks/ATM7-0.4.32-server.zip
+      # CF_SERVER_MOD: /modpacks/ATM7-0.4.32-server.zip
       MEMORY: "24G"
       ENABLE_ROLLING_LOGS: "true"
       TZ: "America/Chicago"
