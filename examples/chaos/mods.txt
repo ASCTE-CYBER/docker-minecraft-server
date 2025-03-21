@@ -85,4 +85,4 @@ https://www.curseforge.com/minecraft/mc-mods/icbm/download/5770085/ICBM-classic-
 https://www.curseforge.com/minecraft/mc-mods/even-more-tnt/download/2709887/EvenMoreTNT-1.0.1.jar
 https://www.curseforge.com/minecraft/mc-mods/epic-siege-mod/download/3356157/EpicSiegeMod-13.169.jar
 https://www.curseforge.com/minecraft/mc-mods/ice-and-fire-dragons/download/5633453/iceandfire-2.1.13-1.20.1-beta-5.jar
-https://www.curseforge.com/minecraft/mc-mods/mega-meteors-mod/download/6271344/MegaMeteors 1.8.5 [1.19.2].jar
+https://www.curseforge.com/minecraft/mc-mods/falling-meteors-mod/download/2242266/meteors-1.7.10-2.14.3.jar
