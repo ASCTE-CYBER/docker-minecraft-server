@@ -14,7 +14,7 @@ services:
     environment:
       EULA: "true"
       TYPE: MODRINTH
-      MODRINTH_MODPACK: https://modrinth.com/modpack/cobblemon-fabric/version/1.6.1
+      MODRINTH_MODPACK: https://modrinth.com/modpack/stormwatchers
       VERSION: 1.21.1
       # CF_SERVER_MOD: /modpacks/ServerFiles-2.41.zip
       MEMORY: "24G"
