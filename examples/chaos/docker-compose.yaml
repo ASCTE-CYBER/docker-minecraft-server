@@ -1,7 +1,7 @@
 services:
   mc_atm7:
     image: itzg/minecraft-server
-    container_name: minecraft-chaos
+    container_name: chaos
     ports:
       - 25565:25565
     restart: unless-stopped
@@ -13,7 +13,7 @@ services:
     tty: true
     environment:
       EULA: "true"
-      TYPE: MODRINTH
+      TYPE: FORGE
       MODRINTH_MODPACK: "https://cdn.modrinth.com/data/5M8bFmdP/versions/mIPjPPem/StormWatchers 1.4.mrpack"
       VERSION: 1.21.1
       # CF_SERVER_MOD: /modpacks/ServerFiles-2.41.zip
@@ -30,8 +30,8 @@ services:
       PVP: "true"
       LEVEL_TYPE: "biomesoplenty"
       MOTD: "Good luck"
-      # MODS_FILE: /extras/mods.txt
-      # REMOVE_OLD_MODS: "true"
+      MODS_FILE: /extras/mods.txt
+      REMOVE_OLD_MODS: "true"
 
 volumes:
   data:
