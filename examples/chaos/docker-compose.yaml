@@ -14,7 +14,7 @@ services:
     environment:
       EULA: "true"
       TYPE: MODRINTH
-      MODRINTH_MODPACK: https://modrinth.com/modpack/stormwatchers
+      MODRINTH_MODPACK: "https://cdn.modrinth.com/data/5M8bFmdP/versions/mIPjPPem/StormWatchers 1.4.mrpack"
       VERSION: 1.21.1
       # CF_SERVER_MOD: /modpacks/ServerFiles-2.41.zip
       MEMORY: "24G"
