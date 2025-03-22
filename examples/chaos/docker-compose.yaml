@@ -14,7 +14,7 @@ services:
     environment:
       EULA: "true"
       TYPE: MODRINTH
-      MODRINTH_MODPACK: https://modrinth.com/modpack/cobblemon-fabric/version/1.3.2
+      MODRINTH_MODPACK: https://modrinth.com/modpack/cobblemon-fabric
       VERSION: 1.21.4
       # CF_SERVER_MOD: /modpacks/ServerFiles-2.41.zip
       MEMORY: "24G"
