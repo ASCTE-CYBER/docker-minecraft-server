@@ -1,31 +1,31 @@
 ## Modrinth - Fabric Mods
 # dependencies & optimizations
-https://modrinth.com/mod/fabric-api
-https://modrinth.com/mod/ferrite-core
-https://modrinth.com/mod/lithium
+https://cdn.modrinth.com/data/P7dR8mSH/versions/TMgpR77k/fabric-api-0.115.4%2B1.21.1.jar
+#https://modrinth.com/mod/ferrite-core
+#https://modrinth.com/mod/lithium
 # sucks to suck
-https://modrinth.com/mod/watched-pot
-https://modrinth.com/mod/player-ladder
-https://modrinth.com/mod/forgiving-void
-https://modrinth.com/datapack/nullscape
-https://modrinth.com/datapack/incendium
-https://modrinth.com/datapack/terralith
+#https://modrinth.com/mod/watched-pot
+#https://modrinth.com/mod/player-ladder
+#https://modrinth.com/mod/forgiving-void
+#https://modrinth.com/datapack/nullscape
+#https://modrinth.com/datapack/incendium
+#https://modrinth.com/datapack/terralith
 # baby food
-https://modrinth.com/mod/simple-water-gravity
-https://modrinth.com/mod/danse
-https://modrinth.com/mod/twerk4fabric
-https://modrinth.com/mod/hats-put-anything-on-your-head
-https://modrinth.com/mod/uwu-craft
-https://modrinth.com/datapack/elytra-armor
+#https://modrinth.com/mod/simple-water-gravity
+#https://modrinth.com/mod/danse
+#https://modrinth.com/mod/twerk4fabric
+https://cdn.modrinth.com/data/RQ4ysWV5/versions/2eL9wmRw/hats-1.0.0.jar
+#https://modrinth.com/mod/uwu-craft
+#https://modrinth.com/datapack/elytra-armor
 # red pepper flakes
-https://modrinth.com/mod/fire-arrows-ignite-fire
-https://modrinth.com/mod/leashable-players
-https://modrinth.com/mod/ramel
-https://modrinth.com/mod/luckyblocks
+#https://modrinth.com/mod/fire-arrows-ignite-fire
+#https://modrinth.com/mod/leashable-players
+#https://modrinth.com/mod/ramel
+#https://modrinth.com/mod/luckyblocks
 # jalepeno
-https://modrinth.com/mod/physics-toys
+#https://modrinth.com/mod/physics-toys
 # ghost pepper
-https://modrinth.com/mod/difficulty
+#https://modrinth.com/mod/difficulty
 # too spicy
 # https://modrinth.com/mod/quickmath
 # https://modrinth.com/mod/mazeworld
