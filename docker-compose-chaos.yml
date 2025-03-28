@@ -8,7 +8,7 @@ services:
       - "25565:25565"
     volumes:
       - data:/data
-      - ./modfile.txt:/extras/modfile.txt:ro
+      - ./modfile.txt:/data/modfile.txt:ro
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -23,4 +23,3 @@ services:
       MODS_FILE: "modfile.txt"
 volumes:
   data: {}
-  
