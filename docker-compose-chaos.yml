@@ -11,11 +11,11 @@ services:
     stdin_open: true
     tty: true
     restart: unless-stopped
-environment:
-  VERSION: 1.21.1
-  EULA: "true"
-  MEMORY: "4G"
-  MOTD: "good luck"
-  TYPE: "FABRIC"
-volumes:
-  data: {}
+    environment:
+      VERSION: 1.21.1
+      EULA: "true"
+      MEMORY: "4G"
+      MOTD: "good luck"
+      TYPE: "FABRIC"
+# volumes:
+#   data: {}
