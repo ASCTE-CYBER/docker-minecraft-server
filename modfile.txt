@@ -1,19 +1,20 @@
-## Modrinth - Fabric Mods
+## Modrinth - Fabric Mods for MC 1.21.1
 # dependencies & optimizations
 https://cdn.modrinth.com/data/P7dR8mSH/versions/TMgpR77k/fabric-api-0.115.4%2B1.21.1.jar
-#https://modrinth.com/mod/ferrite-core
-#https://modrinth.com/mod/lithium
+https://cdn.modrinth.com/data/uXXizFIs/versions/bwKMSBhn/ferritecore-7.0.2-hotfix-fabric.jar
+https://cdn.modrinth.com/data/gvQqBUqZ/versions/MM5BBBOK/lithium-fabric-0.15.0%2Bmc1.21.1.jar
 # sucks to suck
 #https://modrinth.com/mod/watched-pot
 #https://modrinth.com/mod/player-ladder
-#https://modrinth.com/mod/forgiving-void
-#https://modrinth.com/datapack/nullscape
-#https://modrinth.com/datapack/incendium
-#https://modrinth.com/datapack/terralith
+https://cdn.modrinth.com/data/1vkzEZjE/versions/SVhsrwnK/forgivingvoid-fabric-1.21.1-21.1.2.jar
+https://cdn.modrinth.com/data/LPjGiSO4/versions/dHJAVX8s/Nullscape_1.21.x_v1.2.10.jar
+https://cdn.modrinth.com/data/ZVzW5oNS/versions/7mVvV9Th/Incendium_1.21.x_v5.4.4.jar
+https://cdn.modrinth.com/data/8oi3bsk5/versions/MuJMtPGQ/Terralith_1.21.x_v2.5.8.jar
+https://cdn.modrinth.com/data/mb68eIfx/versions/5Ldpp3lm/SkyVillages-1.0.6-1.21.x-fabric-release.jar
 # baby food
 #https://modrinth.com/mod/simple-water-gravity
-#https://modrinth.com/mod/danse
-#https://modrinth.com/mod/twerk4fabric
+https://cdn.modrinth.com/data/vSdZ5THv/versions/LPrmEnPc/danse-1.0.4%2B1.21.jar
+https://cdn.modrinth.com/data/c7Mt6XfI/versions/5V4wO3Wo/twerk4fabric-1.0.0.jar
 https://cdn.modrinth.com/data/RQ4ysWV5/versions/2eL9wmRw/hats-1.0.0.jar
 #https://modrinth.com/mod/uwu-craft
 #https://modrinth.com/datapack/elytra-armor
@@ -21,12 +22,12 @@ https://cdn.modrinth.com/data/RQ4ysWV5/versions/2eL9wmRw/hats-1.0.0.jar
 #https://modrinth.com/mod/fire-arrows-ignite-fire
 #https://modrinth.com/mod/leashable-players
 #https://modrinth.com/mod/ramel
-#https://modrinth.com/mod/luckyblocks
+https://cdn.modrinth.com/data/1x4VJbG6/versions/JTpQAfDf/LuckyBlocks-1.6.1.jar
 # jalepeno
-#https://modrinth.com/mod/physics-toys
+https://cdn.modrinth.com/data/JHvtQzoF/versions/d2Z0m8nL/physics_toys-0.2.0%2B1.21.jar
 # ghost pepper
-#https://modrinth.com/mod/difficulty
+https://cdn.modrinth.com/data/EutyxFnb/versions/upRfwKwe/sihywtcamd-1.11.1%2B1.21.jar
 # too spicy
 # https://modrinth.com/mod/quickmath
 # https://modrinth.com/mod/mazeworld
-# https://modrinth.com/mod/everything-is-tnt
+https://cdn.modrinth.com/data/xXrpujsZ/versions/CChHUgfW/everything-is-tnt-1.1.0%2B1.21.jar
