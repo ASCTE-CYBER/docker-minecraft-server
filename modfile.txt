@@ -25,9 +25,9 @@ https://cdn.modrinth.com/data/RQ4ysWV5/versions/2eL9wmRw/hats-1.0.0.jar
 https://cdn.modrinth.com/data/1x4VJbG6/versions/JTpQAfDf/LuckyBlocks-1.6.1.jar
 # jalepeno
 https://cdn.modrinth.com/data/JHvtQzoF/versions/d2Z0m8nL/physics_toys-0.2.0%2B1.21.jar
+https://cdn.modrinth.com/data/xXrpujsZ/versions/CChHUgfW/everything-is-tnt-1.1.0%2B1.21.jar
 # ghost pepper
 https://cdn.modrinth.com/data/EutyxFnb/versions/upRfwKwe/sihywtcamd-1.11.1%2B1.21.jar
 # too spicy
 # https://modrinth.com/mod/quickmath
 # https://modrinth.com/mod/mazeworld
-https://cdn.modrinth.com/data/xXrpujsZ/versions/CChHUgfW/everything-is-tnt-1.1.0%2B1.21.jar
