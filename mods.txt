@@ -20,3 +20,4 @@ https://cdn.modrinth.com/data/ibnDR6oc/versions/Jsozd95o/qraftyfied-9.1.1.jar
 https://cdn.modrinth.com/data/ZVzW5oNS/versions/7mVvV9Th/Incendium_1.21.x_v5.4.4.jar
 https://cdn.modrinth.com/data/LPjGiSO4/versions/J4B2BaWk/Nullscape_1.21_v1.2.10.zip
 https://cdn.modrinth.com/data/KgKqTqPj/versions/MR95cfEB/infinite-dimensions-2.4.4%2B1.21.1.jar
+https://cdn.modrinth.com/data/lhGA9TYQ/versions/Wto0RchG/architectury-13.0.8-fabric.jar
