@@ -1,13 +1,13 @@
 ## Datapacks for 1.21.1
 # dependencies
-/data/WASD-Libraries-V7.6.0.zip
+# /data/WASD-Libraries-V7.6.0.zip
 
 # important
 https://cdn.modrinth.com/data/lvTwZuVb/versions/WV592KO9/clearlag.zip
 https://cdn.modrinth.com/data/QpeB9IbW/versions/D6611T1Z/gbm_v1_12.zip
 https://cdn.modrinth.com/data/ZtICh1u8/versions/aHSdzSKz/randomizer-complete-edition-1.21.x-v0.2.zip
 https://cdn.modrinth.com/data/vGOSL0ob/versions/dldBI1VA/Unusual%20Precipitation.zip
-https://cdn.modrinth.com/data/o0pQYAX7/versions/dSLc8FVc/WASD%20Random%20Bosses%20V4.1.0%20MC_1.21.zip
+# https://cdn.modrinth.com/data/o0pQYAX7/versions/dSLc8FVc/WASD%20Random%20Bosses%20V4.1.0%20MC_1.21.zip
 
 # mayonnaise
 https://cdn.modrinth.com/data/OhduvhIc/versions/8cEJouzY/Veinminer-1.2.4.zip
