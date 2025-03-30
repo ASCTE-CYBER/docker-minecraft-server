@@ -9,6 +9,7 @@ services:
     volumes:
       - data:/data
       - ./mods.txt:/data/mods.txt:ro
+      - ./datapacks.txt:/data/datapacks.txt:ro
     environment:
       EULA: "true"
       MEMORY: "16G"
@@ -19,7 +20,7 @@ services:
       TYPE: "FABRIC"
       # MOD_PLATFORM: "modrinth"
       MODS_FILE: "mods.txt"
-      DATAPACKS_FILE: datapacks.txt
+      DATAPACKS_FILE: "datapacks.txt"
     restart: unless-stopped
 volumes:
   data: {}
