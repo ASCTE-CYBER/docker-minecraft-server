@@ -19,7 +19,8 @@
 # https://cdn.modrinth.com/data/rZ6z3rgW/versions/x5KgcZzr/Infinite%20Infinity%20v1.2.zip
 # https://cdn.modrinth.com/data/NCPLOWlF/versions/GUzAAxSA/1.21.x%20Withering%20Heights%20v1.0.zip
 # skull emoji
-https://cdn.modrinth.com/data/ZtICh1u8/versions/aHSdzSKz/randomizer-complete-edition-1.21.x-v0.2.zip
+https://cdn.modrinth.com/data/9sPujh2G/versions/QOji4A3H/random_loot_v4.zip
+# https://cdn.modrinth.com/data/ZtICh1u8/versions/aHSdzSKz/randomizer-complete-edition-1.21.x-v0.2.zip
 # https://cdn.modrinth.com/data/hoWhnvjx/versions/SHv5yWfa/Random%20Respawn%20On%20Death.zip
 # https://cdn.modrinth.com/data/o0pQYAX7/versions/dSLc8FVc/WASD%20Random%20Bosses%20V4.1.0%20MC_1.21.zip
 # https://cdn.modrinth.com/data/2o7AuGrH/versions/j38vJwmN/die%40random_v1.0.1_mc23w31a-1.21.4.zip
