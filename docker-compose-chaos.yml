@@ -2,16 +2,13 @@ services:
   mc:
     image: itzg/minecraft-server
     container_name: "chaos"
-    environment:
-      EULA: "true"
+    stdin_open: true
+    tty: true
     ports:
       - "25565:25565"
     volumes:
       - data:/data
       - ./mods.txt:/data/mods.txt:ro
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
     environment:
       EULA: "true"
       MEMORY: "16G"
@@ -23,5 +20,6 @@ services:
       # MOD_PLATFORM: "modrinth"
       MODS_FILE: "mods.txt"
       DATAPACKS_FILE: datapacks.txt
+    restart: unless-stopped
 volumes:
   data: {}
