@@ -13,13 +13,15 @@ services:
     tty: true
     restart: unless-stopped
     environment:
-      VERSION: 1.21.1
       EULA: "true"
       MEMORY: "16G"
       MOTD: "good luck"
-      TYPE: "FABRIC"
       PVP: "true"
       DIFFICULTY: "hard"
-      MODS_FILE: "modfile.txt"
+      VERSION: 1.21.1
+      TYPE: "FABRIC"
+      # MOD_PLATFORM: "modrinth"
+      MODS_FILE: "mods.txt"
+      DATAPACKS_FILE: datapacks.txt
 volumes:
   data: {}
