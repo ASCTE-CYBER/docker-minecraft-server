@@ -21,6 +21,7 @@ services:
       # MOD_PLATFORM: "modrinth"
       MODS_FILE: "mods.txt"
       DATAPACKS_FILE: "datapacks.txt"
+      REMOVE_OLD_DATAPACKS: "true"
     restart: unless-stopped
 volumes:
   data: {}
