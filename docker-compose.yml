@@ -11,7 +11,7 @@ services:
       - data:/data
       - ./mods.txt:/data/mods.txt:ro
       - ./datapacks.txt:/data/datapacks.txt:ro
-      # - ./packs/WASD-Libraries-V7.6.0.zip:/extras/WASD-Libraries-V7.6.0.zip:ro
+      - ./packs/WASD-Libraries-V7.6.0.zip:/data/WASD-Libraries-V7.6.0.zip
     environment:
       EULA: "true"
       MEMORY: "16G"

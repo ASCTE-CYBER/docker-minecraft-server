@@ -5,10 +5,16 @@ https://cdn.modrinth.com/data/uXXizFIs/versions/bwKMSBhn/ferritecore-7.0.2-hotfi
 https://cdn.modrinth.com/data/gvQqBUqZ/versions/MM5BBBOK/lithium-fabric-0.15.0%2Bmc1.21.1.jar
 
 https://cdn.modrinth.com/data/Ha12ukE6/versions/TKN4apsA/xphealth-1.0.0.jar
-#https://cdn.modrinth.com/data/8Sy2SQOg/versions/miHRk3qk/no_xp_anvils-1.1.1-fabric-1.21.1.jar
 https://cdn.modrinth.com/data/SrRSv8ID/versions/2IYNo0BI/BoostedExperience-1.2.1.jar
 https://cdn.modrinth.com/data/WpCaRM4Y/versions/C3xgdZcU/Rose-Bush-1.2.jar
 https://cdn.modrinth.com/data/xXrpujsZ/versions/CChHUgfW/everything-is-tnt-1.1.0%2B1.21.jar
+https://cdn.modrinth.com/data/4Eg1Wjr2/versions/UAcfyBQi/tpa-utilities-1.1.0.jar
 
 #https://cdn.modrinth.com/data/RQ4ysWV5/versions/2eL9wmRw/hats-1.0.0.jar
 #https://cdn.modrinth.com/data/c7Mt6XfI/versions/5V4wO3Wo/twerk4fabric-1.0.0.jar
+
+# world gen
+#https://cdn.modrinth.com/data/8oi3bsk5/versions/MuJMtPGQ/Terralith_1.21.x_v2.5.8.jar
+#https://cdn.modrinth.com/data/ibnDR6oc/versions/Jsozd95o/qraftyfied-9.1.1.jar
+#https://cdn.modrinth.com/data/ZVzW5oNS/versions/7mVvV9Th/Incendium_1.21.x_v5.4.4.jar
+#https://cdn.modrinth.com/data/LPjGiSO4/versions/J4B2BaWk/Nullscape_1.21_v1.2.10.zip
