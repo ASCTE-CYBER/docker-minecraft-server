@@ -1,6 +1,6 @@
 ## Datapacks for 1.21.1
 # dependencies
-./packs/WASD-Libraries-V7.6.0.zip
+./extras/WASD-Libraries-V7.6.0.zip
 # mayonnaise
 https://cdn.modrinth.com/data/lvTwZuVb/versions/WV592KO9/clearlag.zip
 https://cdn.modrinth.com/data/OhduvhIc/versions/8cEJouzY/Veinminer-1.2.4.zip
