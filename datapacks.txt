@@ -14,6 +14,7 @@ https://cdn.modrinth.com/data/tL7ebxr2/versions/YbnVPwpJ/Super%20Enchants%201.4.
 https://cdn.modrinth.com/data/KqZcJkQm/versions/XpfUVgey/HyperLeash%20v2.2.zip
 # ghost
 https://cdn.modrinth.com/data/2E47WQmN/versions/4ghjP6qO/WASD%20Moar%20TNT%20V2.1.0%20MC_1.21.zip
+https://www.dropbox.com/scl/fi/mq9i6yvfexoj6fj11rnwr/WASD-Libraries-V7.6.0-MC_1.21.1.zip?rlkey=x58f6mii0ja7s4c2s92udi8u9&st=8asfhucm&dl=1
 https://cdn.modrinth.com/data/rZ6z3rgW/versions/x5KgcZzr/Infinite%20Infinity%20v1.2.zip
 https://cdn.modrinth.com/data/NCPLOWlF/versions/GUzAAxSA/1.21.x%20Withering%20Heights%20v1.0.zip
 # skull emoji
