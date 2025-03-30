@@ -10,7 +10,7 @@ services:
       - data:/data
       - ./mods.txt:/data/mods.txt:ro
       - ./datapacks.txt:/data/datapacks.txt:ro
-      - ./packs/WASD-Libraries-V7.6.0.zip:/extras/WASD-Libraries-V7.6.0.zip:ro
+      # - ./packs/WASD-Libraries-V7.6.0.zip:/extras/WASD-Libraries-V7.6.0.zip:ro
     environment:
       EULA: "true"
       MEMORY: "16G"
@@ -23,6 +23,10 @@ services:
       MODS_FILE: "mods.txt"
       DATAPACKS_FILE: "datapacks.txt"
       REMOVE_OLD_DATAPACKS: "true"
+      RCON_CMDS_STARTUP:  |-
+        gamerule keepInventory true
+        scoreboard players set #CL_Time ClearLag 300
+
     restart: unless-stopped
 volumes:
   data: {}
