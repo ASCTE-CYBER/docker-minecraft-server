@@ -9,21 +9,21 @@
 # https://cdn.modrinth.com/data/qmzLjXzU/versions/Vd7xyCsS/%5B1.21-1.21.5%5D%20Injured%20Effects%20v1.4.8.zip
 # https://cdn.modrinth.com/data/yyXSoBFw/versions/6zyuptCp/BedrockBreaker.zip
 # jalepeno
-https://cdn.modrinth.com/data/LbDPuvYD/versions/Vklqbhki/MoreEnchants-1.2.1.zip
+# https://cdn.modrinth.com/data/LbDPuvYD/versions/Vklqbhki/MoreEnchants-1.2.1.zip
 # https://cdn.modrinth.com/data/E3DCBd3T/versions/jqsVsBYL/CraftSpawner-%5B1.21%5D-v.2.0.0.zip
-https://cdn.modrinth.com/data/tL7ebxr2/versions/YbnVPwpJ/Super%20Enchants%201.4.2.zip
-https://cdn.modrinth.com/data/KqZcJkQm/versions/XpfUVgey/HyperLeash%20v2.2.zip
+# https://cdn.modrinth.com/data/tL7ebxr2/versions/YbnVPwpJ/Super%20Enchants%201.4.2.zip
+# https://cdn.modrinth.com/data/KqZcJkQm/versions/XpfUVgey/HyperLeash%20v2.2.zip
 # ghost
 # https://cdn.modrinth.com/data/2E47WQmN/versions/4ghjP6qO/WASD%20Moar%20TNT%20V2.1.0%20MC_1.21.zip
 # https://www.dropbox.com/scl/fi/mq9i6yvfexoj6fj11rnwr/WASD-Libraries-V7.6.0-MC_1.21.1.zip?rlkey=x58f6mii0ja7s4c2s92udi8u9&st=8asfhucm&dl=1
-https://cdn.modrinth.com/data/rZ6z3rgW/versions/x5KgcZzr/Infinite%20Infinity%20v1.2.zip
-https://cdn.modrinth.com/data/NCPLOWlF/versions/GUzAAxSA/1.21.x%20Withering%20Heights%20v1.0.zip
+# https://cdn.modrinth.com/data/rZ6z3rgW/versions/x5KgcZzr/Infinite%20Infinity%20v1.2.zip
+# https://cdn.modrinth.com/data/NCPLOWlF/versions/GUzAAxSA/1.21.x%20Withering%20Heights%20v1.0.zip
 # skull emoji
 https://cdn.modrinth.com/data/ZtICh1u8/versions/aHSdzSKz/randomizer-complete-edition-1.21.x-v0.2.zip
 # https://cdn.modrinth.com/data/hoWhnvjx/versions/SHv5yWfa/Random%20Respawn%20On%20Death.zip
-https://cdn.modrinth.com/data/o0pQYAX7/versions/dSLc8FVc/WASD%20Random%20Bosses%20V4.1.0%20MC_1.21.zip
-https://cdn.modrinth.com/data/2o7AuGrH/versions/j38vJwmN/die%40random_v1.0.1_mc23w31a-1.21.4.zip
-https://cdn.modrinth.com/data/vGOSL0ob/versions/dldBI1VA/Unusual%20Precipitation.zip
-https://cdn.modrinth.com/data/kAYDYFGK/versions/ePrQY0UT/WASD%20Moar%20Bosses%20V1.3.0%20MC_1.21.zip
-https://cdn.modrinth.com/data/HahONwPQ/versions/fN9ckfrA/Supply%20Drops.zip
-https://cdn.modrinth.com/data/3PHdYhrd/versions/60o4wVKN/Atmospheric%20Update%20Datapack%20%28No%20Worldgen%29%202.5.zip
+# https://cdn.modrinth.com/data/o0pQYAX7/versions/dSLc8FVc/WASD%20Random%20Bosses%20V4.1.0%20MC_1.21.zip
+# https://cdn.modrinth.com/data/2o7AuGrH/versions/j38vJwmN/die%40random_v1.0.1_mc23w31a-1.21.4.zip
+# https://cdn.modrinth.com/data/vGOSL0ob/versions/dldBI1VA/Unusual%20Precipitation.zip
+# https://cdn.modrinth.com/data/kAYDYFGK/versions/ePrQY0UT/WASD%20Moar%20Bosses%20V1.3.0%20MC_1.21.zip
+# https://cdn.modrinth.com/data/HahONwPQ/versions/fN9ckfrA/Supply%20Drops.zip
+# https://cdn.modrinth.com/data/3PHdYhrd/versions/60o4wVKN/Atmospheric%20Update%20Datapack%20%28No%20Worldgen%29%202.5.zip
