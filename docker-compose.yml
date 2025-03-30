@@ -27,8 +27,10 @@ services:
       RCON_CMDS_FIRST_CONNECT:  |-
         gamerule keepInventory true
         scoreboard players set #CL_Time ClearLag 120
-        gamerule healthOnSpawn 3
         scoreboard players set rain_interval unusual-precipitation-config 123
+        gamerule healthOnSpawn 3
+        gamerule maxHealth 40
+        gamerule levelsPerHeart 5
     restart: unless-stopped
 volumes:
   data: {}
