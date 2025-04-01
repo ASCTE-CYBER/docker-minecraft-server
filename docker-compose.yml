@@ -31,6 +31,8 @@ services:
         gamerule healthOnSpawn 3
         gamerule maxHealth 40
         gamerule levelsPerHeart 5
+        scoreboard objectives add deaths deathCount
+        scoreboard objectives setdisplay list deaths
     restart: unless-stopped
 volumes:
   data: {}
