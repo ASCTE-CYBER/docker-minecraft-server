@@ -5,28 +5,27 @@ https://cdn.modrinth.com/data/lvTwZuVb/versions/WV592KO9/clearlag.zip
 https://cdn.modrinth.com/data/QpeB9IbW/versions/D6611T1Z/gbm_v1_12.zip
 https://cdn.modrinth.com/data/ZtICh1u8/versions/aHSdzSKz/randomizer-complete-edition-1.21.x-v0.2.zip
 https://cdn.modrinth.com/data/vGOSL0ob/versions/dldBI1VA/Unusual%20Precipitation.zip
-https://cdn.modrinth.com/data/eYz1XI70/versions/rRuxAJwt/lucky-blocks.zip
+# https://cdn.modrinth.com/data/eYz1XI70/versions/rRuxAJwt/lucky-blocks.zip
 
 # mayonnaise
-https://cdn.modrinth.com/data/OhduvhIc/versions/8cEJouzY/Veinminer-1.2.4.zip
+#https://cdn.modrinth.com/data/OhduvhIc/versions/8cEJouzY/Veinminer-1.2.4.zip
 https://cdn.modrinth.com/data/EzwIpTv1/versions/HwdEzeA4/Anti%20Ender%20Dragon%20Grief.zip
 # cayenne
-https://cdn.modrinth.com/data/liI36we9/versions/FNmjLJzY/bucketable-v3.3-data-pack.zip
+#https://cdn.modrinth.com/data/liI36we9/versions/FNmjLJzY/bucketable-v3.3-data-pack.zip
 https://cdn.modrinth.com/data/yyXSoBFw/versions/6zyuptCp/BedrockBreaker.zip
-https://cdn.modrinth.com/data/jeXS1kjY/versions/O1YsxHbo/LuckyFishingRod%201.21.1-1.21.zip
-https://cdn.modrinth.com/data/K4IQokeu/versions/6t5IulLW/WASD%20Crazy%20Swords%20V1.5.0%20MC_1.21.1.zip
-https://cdn.modrinth.com/data/6UIWe787/versions/EFGVGpeL/WASD%20Bows%20V2.2.4%20MC_1.20.1.zip
-https://cdn.modrinth.com/data/SGohpNxk/versions/ZZJUrf0E/WASD%20Moar%20Pearls%20V2.4.0%20MC_1.21.zip
-https://cdn.modrinth.com/data/ZAcFOlCw/versions/VP33Ti0e/Chalie%27s%20True%20Weaponry%201.21.-1.21.1%20v1.1.0.zip
-https://cdn.modrinth.com/data/ILL8mgu6/versions/HWP7aP1z/Warfare%20Expanded%201.5.1.1.zip
+# https://cdn.modrinth.com/data/K4IQokeu/versions/6t5IulLW/WASD%20Crazy%20Swords%20V1.5.0%20MC_1.21.1.zip
+# https://cdn.modrinth.com/data/6UIWe787/versions/EFGVGpeL/WASD%20Bows%20V2.2.4%20MC_1.20.1.zip
+# https://cdn.modrinth.com/data/SGohpNxk/versions/ZZJUrf0E/WASD%20Moar%20Pearls%20V2.4.0%20MC_1.21.zip
+# https://cdn.modrinth.com/data/ZAcFOlCw/versions/VP33Ti0e/Chalie%27s%20True%20Weaponry%201.21.-1.21.1%20v1.1.0.zip
+# https://cdn.modrinth.com/data/ILL8mgu6/versions/HWP7aP1z/Warfare%20Expanded%201.5.1.1.zip
 # jalepeno
 https://cdn.modrinth.com/data/LbDPuvYD/versions/Vklqbhki/MoreEnchants-1.2.1.zip
-https://cdn.modrinth.com/data/E3DCBd3T/versions/jqsVsBYL/CraftSpawner-%5B1.21%5D-v.2.0.0.zip
+# https://cdn.modrinth.com/data/E3DCBd3T/versions/jqsVsBYL/CraftSpawner-%5B1.21%5D-v.2.0.0.zip
 https://cdn.modrinth.com/data/tL7ebxr2/versions/YbnVPwpJ/Super%20Enchants%201.4.2.zip
-https://cdn.modrinth.com/data/KqZcJkQm/versions/XpfUVgey/HyperLeash%20v2.2.zip
+# https://cdn.modrinth.com/data/KqZcJkQm/versions/XpfUVgey/HyperLeash%20v2.2.zip
 https://cdn.modrinth.com/data/yo1bGdBx/versions/yDKPwPkr/dragonkind-evolved-by-kanokarob-v1.5.3.zip
 # ghost
-https://cdn.modrinth.com/data/2E47WQmN/versions/4ghjP6qO/WASD%20Moar%20TNT%20V2.1.0%20MC_1.21.zip
+# https://cdn.modrinth.com/data/2E47WQmN/versions/4ghjP6qO/WASD%20Moar%20TNT%20V2.1.0%20MC_1.21.zip
 https://cdn.modrinth.com/data/rZ6z3rgW/versions/x5KgcZzr/Infinite%20Infinity%20v1.2.zip
 https://cdn.modrinth.com/data/hH2IQtNT/versions/ZxmSjkpu/Chaos%20Core%20%281.21.4%29%20%5B1.2.1%5D.zip
 # skull emoji
@@ -50,3 +49,4 @@ https://cdn.modrinth.com/data/wn4OK7TG/versions/yy6Qf57p/CoffeeGAwfulLightningv2
 
 # Untested
 # https://cdn.modrinth.com/data/hxerjRLt/versions/V9YcQOLr/nice_mobs_remastered_v2-5b.zip
+# https://cdn.modrinth.com/data/jeXS1kjY/versions/O1YsxHbo/LuckyFishingRod%201.21.1-1.21.zip
