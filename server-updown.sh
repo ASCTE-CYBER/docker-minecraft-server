@@ -1,3 +1,4 @@
+#!/bin/bash
 # This script starts up and shuts down the server
 # such that it is inaccessible during school hours.
 
