@@ -10,14 +10,16 @@ OVERRIDE="0"
 
 while true; do
     DAY=$(date +%A)
+    # calculate current time, remove leading zeroes, convert to numeric
     CURRENT_TIME=$(date +%H%M)
+    CURRENT_TIME=$((10#${CURRENT_TIME#0}))
     
     # Determine proper server state given time
-    if [[ "$((10#$CURRENT_TIME))" -lt "$SCHOOL_START" ]]; then
+    if [[ "$CURRENT_TIME" -lt "$SCHOOL_START" ]]; then
         SERVER_UP="1"
-    elif [[ "$((10#$CURRENT_TIME))" -gt "$SCHOOL_END_MTh" ]]; then
+    elif [[ "$CURRENT_TIME" -gt "$SCHOOL_END_MTh" ]]; then
         SERVER_UP="1"
-    elif [[ "$DAY" == "Friday" && "$((10#$CURRENT_TIME))" -gt "$SCHOOL_END_F" ]]; then
+    elif [[ "$DAY" == "Friday" && "$CURRENT_TIME" -gt "$SCHOOL_END_F" ]]; then
         SERVER_UP="1"
     elif [[ "$OVERRIDE" == "1" ]]; then
         SERVER_UP="1"
