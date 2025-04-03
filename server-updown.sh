@@ -12,7 +12,7 @@ while true; do
     DAY=$(date +%A)
     # calculate current time, remove leading zeroes, convert to numeric
     CURRENT_TIME=$(date +%H%M)
-    CURRENT_TIME=$((10#${CURRENT_TIME#0}))
+    CURRENT_TIME=${CURRENT_TIME#0}
     
     # Determine proper server state given time
     if [[ "$CURRENT_TIME" -lt "$SCHOOL_START" ]]; then
