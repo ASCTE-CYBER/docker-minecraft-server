@@ -16,13 +16,15 @@ while true; do
     CURRENT_TIME=${CURRENT_TIME#0}
     
     # Determine proper server state given time
-    if [[ "$CURRENT_TIME" -lt "$SCHOOL_START" ]]; then
+    if [[ "$OVERRIDE" == "off" ]]; then
+        SERVER_UP="0"
+    elif [[ "$CURRENT_TIME" -lt "$SCHOOL_START" ]]; then
         SERVER_UP="1"
     elif [[ "$CURRENT_TIME" -gt "$SCHOOL_END_MTh" ]]; then
         SERVER_UP="1"
     elif [[ "$DAY" == "Friday" && "$CURRENT_TIME" -gt "$SCHOOL_END_F" ]]; then
         SERVER_UP="1"
-    elif [[ "$OVERRIDE" == "1" ]]; then
+    elif [[ "$OVERRIDE" == "on" ]]; then
         SERVER_UP="1"
     else
         SERVER_UP="0"
