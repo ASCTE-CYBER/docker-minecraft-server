@@ -2,15 +2,15 @@
 # such that it is inaccessible during school hours.
 
 # Variable initialization
-SCHOOL_START="0800"
-SCHOOL_END_MTh="1500"
-SCHOOL_END_F="1300"
+SCHOOL_START=800
+SCHOOL_END_MTh=1500
+SCHOOL_END_F=1300
 SERVER_STATE="-1"
 OVERRIDE="0"
 
 while true; do
     DAY=$(date +%A)
-    CURRENT_TIME=$(date +%H%M)
+    CURRENT_TIME=$((10#$(date +%H%M)))
     
     # Determine proper server state given time
     if [[ "$CURRENT_TIME" -lt "$SCHOOL_START" ]]; then
