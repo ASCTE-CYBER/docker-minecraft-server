@@ -7,7 +7,7 @@ SCHOOL_START=800
 SCHOOL_END_MTh=1500
 SCHOOL_END_F=1300
 SERVER_STATE="-1"
-OVERRIDE="0"
+OVERRIDE="none"
 
 while true; do
     DAY=$(date +%A)
@@ -32,10 +32,10 @@ while true; do
     
     # Start/stop the server accordingly
     if [[ "$SERVER_UP" == "1" && "$SERVER_STATE" != "1" ]]; then
-        sudo docker start chaos && SERVER_STATE="1"
+        docker start chaos && SERVER_STATE="1"
         echo "Started server at $(date)."
     elif [[ "$SERVER_UP" == "0" && "$SERVER_STATE" != "0" ]]; then
-        sudo docker stop chaos && SERVER_STATE="0"
+        docker stop chaos && SERVER_STATE="0"
         echo "Stopped server at $(date)."
     fi
     
