@@ -16,6 +16,8 @@ services:
     environment:
       EULA: "true"
       MEMORY: "24G"
+      ENABLE_ROLLING_LOGS: "true"
+      TZ: "America/Chicago"
       MOTD: "red mushrooms => victory"
       PVP: "true"
       DIFFICULTY: "hard"
@@ -35,6 +37,7 @@ services:
         scoreboard objectives add deaths deathCount
         scoreboard objectives setdisplay list deaths
       RCON_PASSWORD: nabruh
+      SNOOPER_ENABLED: "false"
     restart: unless-stopped
 volumes:
   data: {}
