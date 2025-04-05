@@ -16,7 +16,7 @@ services:
     environment:
       EULA: "true"
       MEMORY: "24G"
-      MOTD: "MrJohnson's Survival Challenge"
+      MOTD: "red mushrooms => victory"
       PVP: "true"
       DIFFICULTY: "hard"
       VERSION: 1.21.1
