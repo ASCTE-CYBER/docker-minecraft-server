@@ -1,8 +1,8 @@
-# create chaos!
+# minecraft club FALL 2026!
 services:
   mc:
     image: itzg/minecraft-server
-    container_name: chaos
+    container_name: mcclub
     stdin_open: true
     tty: true
     ports:
@@ -12,30 +12,29 @@ services:
       - data:/data
       - ./mods.txt:/data/mods.txt:ro
       - ./datapacks.txt:/data/datapacks.txt:ro
-      - ./packs/WASD-Libraries-V7.6.0.zip:/data/WASD-Libraries-V7.6.0.zip
     environment:
       EULA: "true"
       MEMORY: "24G"
       ENABLE_ROLLING_LOGS: "true"
       TZ: "America/Chicago"
-      MOTD: "red mushrooms => victory"
+      MOTD: "May the odds be ever in your favour..."
       PVP: "true"
-      DIFFICULTY: "hard"
-      VERSION: 1.21.1
+      DIFFICULTY: "normal"
+      VERSION: 26.3
       TYPE: "FABRIC"
       # MOD_PLATFORM: "modrinth"
       MODS_FILE: "mods.txt"
       DATAPACKS_FILE: "datapacks.txt"
       REMOVE_OLD_DATAPACKS: "true"
-      RCON_CMDS_FIRST_CONNECT:  |-
-        gamerule keepInventory true
-        scoreboard players set #CL_Time ClearLag 120
-        scoreboard players set rain_interval unusual-precipitation-config 123
-        gamerule healthOnSpawn 3
-        gamerule maxHealth 40
-        gamerule levelsPerHeart 5
-        scoreboard objectives add deaths deathCount
-        scoreboard objectives setdisplay list deaths
+      # RCON_CMDS_FIRST_CONNECT:  |-
+      #   gamerule keepInventory true
+      #   scoreboard players set #CL_Time ClearLag 120
+      #   scoreboard players set rain_interval unusual-precipitation-config 123
+      #   gamerule healthOnSpawn 3
+      #   gamerule maxHealth 40
+      #   gamerule levelsPerHeart 5
+      #   scoreboard objectives add deaths deathCount
+      #   scoreboard objectives setdisplay list deaths
       RCON_PASSWORD: nabruh
       SNOOPER_ENABLED: "false"
     restart: unless-stopped
