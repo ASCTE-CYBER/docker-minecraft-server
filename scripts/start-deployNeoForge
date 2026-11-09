@@ -1,7 +1,8 @@
 #!/bin/bash
 
 : "${NEOFORGE_VERSION:=latest}"
-: "${NEOFORGE_FORCE_REINSTALL:=false}}"
+: "${NEOFORGE_FORCE_REINSTALL:=false}"
+: "${NEOFORGE_INSTALLER:=}"
 
 # shellcheck source=start-utils
 . "${SCRIPTS:-$(dirname "$0")}/start-utils"
@@ -9,22 +10,23 @@ isDebugging && set -x
 
 resultsFile=/data/.run-neoforge.env
 
-if ! mc-image-helper install-neoforge \
+if [[ ${NEOFORGE_INSTALLER} ]]; then
+  if ! mc-image-helper install-neoforge --neoforge-installer="${NEOFORGE_INSTALLER}" --output-directory=/data --results-file=${resultsFile} --minecraft-version="${VERSION}" --force-reinstall="${NEOFORGE_FORCE_REINSTALL}"; then
+    logError "Failed to installForge given installer ${NEOFORGE_INSTALLER}"
+    exit 1
+  fi
+elif ! mc-image-helper install-neoforge \
   --output-directory=/data \
   --results-file=${resultsFile} \
   --minecraft-version="${VERSION}" \
   --neoforge-version="${NEOFORGE_VERSION}" \
   --force-reinstall="${NEOFORGE_FORCE_REINSTALL}"; then
-    log "ERROR failed to install Forge"
-    exit 1
+  logError "Failed to install NeoForge"
+  exit 1
 fi
 
-# grab SERVER and export it
-set -a
-# shellcheck disable=SC1090
-source ${resultsFile}
-set +a
+applyResultsFile ${resultsFile}
 
 export FAMILY=FORGE
 
-exec "${SCRIPTS:-/}start-setupWorld" "$@"
+exec "$(dirname "$0")/start-setupWorld" "$@"

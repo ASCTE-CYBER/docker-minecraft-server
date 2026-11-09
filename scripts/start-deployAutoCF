@@ -2,7 +2,7 @@
 set -eu
 
 # shellcheck source=start-utils
-. "${SCRIPTS:-/}start-utils"
+. "$(dirname "$0")/start-utils"
 
 : "${CF_PAGE_URL:=}"
 : "${CF_SLUG:=}"
@@ -14,75 +14,60 @@ set -eu
 : "${CF_IGNORE_MISSING_FILES:=}"
 : "${CF_EXCLUDE_INCLUDE_FILE=/image/cf-exclude-include.json}"
 : "${CF_EXCLUDE_MODS:=}"
+: "${CF_EXCLUDE_ALL_MODS:=}"
 : "${CF_FORCE_INCLUDE_MODS:=}"
 : "${CF_SET_LEVEL_FROM:=}" # --set-level-from
 : "${CF_OVERRIDES_SKIP_EXISTING:=false}" # --overrides-skip-existing
 : "${CF_OVERRIDES_EXCLUSIONS:=}" # --overrides-exclusions
 : "${CF_DOWNLOADS_REPO=$([ -d /downloads ] && echo '/downloads' || echo '')}"
 : "${CF_MODPACK_MANIFEST:=}"
+: "${CF_API_CACHE_DEFAULT_TTL:=}" # as ISO-8601 duration, such as P2D or PT12H
+: "${CF_MOD_LOADER_VERSION:=}" # Override mod loader version
+: "${CF_USE_HTTP2:=false}" # CF downloads are faster with HTTP 1.1
 
 resultsFile=/data/.install-curseforge.env
 
 isDebugging && set -x
 
-ensureRemoveAllModsOff "MOD_PLATFORM=AUTO_CURSEFORGE"
+ensureRemoveAllModsOff "MODPACK_PLATFORM=AUTO_CURSEFORGE"
 
 args=(
   --results-file="$resultsFile"
-)
-if [[ $CF_PAGE_URL ]]; then
-  args+=(--modpack-page-url="$CF_PAGE_URL")
-fi
-if [[ $CF_FILE_ID ]]; then
-  args+=(--file-id="$CF_FILE_ID")
-fi
-if [[ $CF_SLUG ]]; then
-  args+=(--slug="$CF_SLUG")
-fi
-if [[ $CF_MODPACK_MANIFEST ]]; then
-  args+=(--modpack-manifest="$CF_MODPACK_MANIFEST")
-fi
-if [[ $CF_FILENAME_MATCHER ]]; then
-  args+=(--filename-matcher="$CF_FILENAME_MATCHER")
-fi
-if [[ ${CF_SET_LEVEL_FROM} ]]; then
-  args+=(--set-level-from="$CF_SET_LEVEL_FROM")
-fi
-if [[ ${CF_OVERRIDES_EXCLUSIONS} ]]; then
-  args+=(--overrides-exclusions="$CF_OVERRIDES_EXCLUSIONS")
-fi
-if [[ ${CF_IGNORE_MISSING_FILES} ]]; then
-  args+=(--ignore-missing-files="$CF_IGNORE_MISSING_FILES")
-fi
-args+=(
   --force-synchronize="$CF_FORCE_SYNCHRONIZE"
   --force-reinstall-modloader="$CF_FORCE_REINSTALL_MODLOADER"
   --overrides-skip-existing="$CF_OVERRIDES_SKIP_EXISTING"
+  --use-http2="$CF_USE_HTTP2"
 )
+setArg() {
+  arg="${1?}"
+  var="${2?}"
 
-if [[ $CF_EXCLUDE_MODS ]]; then
-  args+=( --exclude-mods="$CF_EXCLUDE_MODS" )
-fi
-if [[ $CF_FORCE_INCLUDE_MODS ]]; then
-  args+=( --force-include-mods="$CF_FORCE_INCLUDE_MODS" )
-fi
-if [[ $CF_EXCLUDE_INCLUDE_FILE ]]; then
-  args+=( --exclude-include-file="$CF_EXCLUDE_INCLUDE_FILE" )
-fi
-if [[ $CF_DOWNLOADS_REPO ]]; then
-  args+=( --downloads-repo="$CF_DOWNLOADS_REPO" )
-fi
+  if [[ ${!var} ]]; then
+      args+=("${arg}=${!var}")
+  fi
+}
+setArg --modpack-page-url CF_PAGE_URL
+setArg --file-id CF_FILE_ID
+setArg --slug CF_SLUG
+setArg --modpack-manifest CF_MODPACK_MANIFEST
+setArg --filename-matcher CF_FILENAME_MATCHER
+setArg --set-level-from CF_SET_LEVEL_FROM
+setArg --overrides-exclusions CF_OVERRIDES_EXCLUSIONS
+setArg --ignore-missing-files CF_IGNORE_MISSING_FILES
+setArg --api-cache-default-ttl CF_API_CACHE_DEFAULT_TTL
+setArg --exclude-mods CF_EXCLUDE_MODS
+setArg --exclude-all-mods CF_EXCLUDE_ALL_MODS
+setArg --force-include-mods CF_FORCE_INCLUDE_MODS
+setArg --exclude-include-file CF_EXCLUDE_INCLUDE_FILE
+setArg --mod-loader-version CF_MOD_LOADER_VERSION
+setArg --downloads-repo CF_DOWNLOADS_REPO
 
 if ! mc-image-helper install-curseforge "${args[@]}"; then
-    log "ERROR failed to auto-install CurseForge modpack"
+    logError "Failed to auto-install CurseForge modpack"
     exit 1
 fi
 
-# grab SERVER, TYPE, VERSION and export it
-set -a
-# shellcheck disable=SC1090
-source "${resultsFile}"
-set +a
+applyResultsFile ${resultsFile}
 resolveFamily
 
-exec "${SCRIPTS:-/}start-setupWorld" "$@"
+exec "$(dirname "$0")/start-setupWorld" "$@"

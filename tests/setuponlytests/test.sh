@@ -41,25 +41,34 @@ setupOnlyMinecraftTest(){
     fi
   fi
 
+  if [ -f require_inside.sh ]; then
+    # require_inside.sh scripts run inside the image under test to check for things like a particular
+    # JVM file or feature. A non-zero exit status indicates the test should be skipped.
+    if ! docker run --rm --entrypoint bash -v "${PWD}/require_inside.sh":/require_inside:ro "${IMAGE_TO_TEST}" -e /require_inside; then
+      echo "${folder} SKIP (require_inside)"
+      cd ..
+      return 0
+    fi
+  fi
+
   # false positive since it's used in delta calculations below
   # shellcheck disable=SC2034
   start=$(date +%s)
-  if ! logs=$(docker compose run --rm -e SETUP_ONLY=true -e DEBUG="${DEBUG:-false}" mc 2>&1); then
+  status=PASSED
+  verify=
+  if ! logs=$(docker compose run --rm -e SETUP_ONLY=true -e DEBUG="${DEBUG:-false}" -e GH_TOKEN="${GH_TOKEN:-}" mc 2>&1); then
+    status=FAILED
     outputContainerLog "$logs"
     result=1
   elif [ -f verify.sh ]; then
+    verify=" verify"
     if ! docker run --rm --entrypoint bash -v "${PWD}/data":/data -v "${PWD}/verify.sh":/verify "${IMAGE_TO_TEST}" -e /verify; then
-      endTime=$(date +%s)
-      echo "${folder} FAILED verify in $(delta start)"
+      status=FAILED
       outputContainerLog "$logs"
       result=1
-    else
-      endTime=$(date +%s)
-      echo "${folder} PASSED verify in $(delta start)"
     fi
-  else
-    echo "${folder} PASSED in $(delta start)"
   fi
+  echo "${folder} ${status}${verify} in $(delta start)"
 
   docker compose down -v --remove-orphans >& /dev/null
   cd ..
@@ -67,16 +76,17 @@ setupOnlyMinecraftTest(){
   return $result
 }
 
-# go through each folder in setuponly and test setups
-if (( $# > 0 )); then
-  for folder in "$@"; do
-    echo "Starting Tests in ${folder}"
-    setupOnlyMinecraftTest "$folder"
-  done
-else
-  readarray -t folders < <(find . -maxdepth 2 -mindepth 2 -name docker-compose.yml -printf '%h\n')
-  for folder in "${folders[@]}"; do
-    echo "Starting Tests in ${folder} using $IMAGE_TO_TEST"
-    setupOnlyMinecraftTest "$folder"
-  done
+foldersList=("$@")
+image=""
+
+# Go through each folder in setuponly and test setups
+if (( $# == 0 )); then
+  readarray -t folders < <(find . -maxdepth 2 -mindepth 2 \( -name compose.yml -o -name docker-compose.yml \) -exec dirname "{}" \; | sort -u)
+  foldersList=("${folders[@]}")
+  image=" using $IMAGE_TO_TEST"
 fi
+
+for folder in "${foldersList[@]}"; do
+  echo "Starting Tests in ${folder}${image}"
+  setupOnlyMinecraftTest "$folder"
+done

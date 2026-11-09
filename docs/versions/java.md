@@ -10,25 +10,29 @@ or explicitly include the tag, such as
 
 where `<tag>` refers to the first column of this table:
 
-| Tag              | Java version | Linux  | JVM Type           | Architecture        |
-|------------------|--------------|--------|--------------------|---------------------|
-| latest           | 21           | Ubuntu | Hotspot            | amd64, arm64        |
-| stable           | 21           | Ubuntu | Hotspot            | amd64, arm64        |
-| java21           | 21           | Ubuntu | Hotspot            | amd64, arm64        |
-| java21-jdk       | 21           | Ubuntu | Hotspot+JDK        | amd64, arm64        |
-| java21-alpine    | 21           | Alpine | Hotspot            | amd64, arm64        |
-| java21-graalvm   | 21           | Oracle | Oracle GraalVM[^1] | amd64, arm64        |   
-| java17           | 17           | Ubuntu | Hotspot            | amd64, arm64, armv7 |
-| java17-graalvm   | 17           | Oracle | Oracle GraalVM[^1] | amd64, arm64        |   
-| java17-alpine    | 17           | Alpine | Hotspot            | amd64  (1)          |
-| java11           | 11           | Ubuntu | Hotspot            | amd64, arm64, armv7 |
-| java8            | 8            | Ubuntu | Hotspot            | amd64, arm64, armv7 |
-| java8-alpine     | 8            | Alpine | Hotspot            | amd64  (1)          |
-| java8-jdk        | 8            | Ubuntu | Hotspot+JDK        | amd64               |
-| java8-openj9     | 8            | Debian | OpenJ9             | amd64               |
-| java8-graalvm-ce | 8            | Oracle | GraalVM CE         | amd64               |
+| Tag           | Java version | Linux  | JVM Type    | Architecture          | Note |
+|---------------|--------------|--------|-------------|-----------------------|------|
+| latest        | 25           | Ubuntu | Hotspot     | amd64, arm64, riscv64 |      |
+| stable        | 25           | Ubuntu | Hotspot     | amd64, arm64, riscv64 |      |
+| java25        | 25           | Ubuntu | Hotspot     | amd64, arm64, riscv64 |      |
+| java25-alpine | 25           | Alpine | Hotspot     | amd64, arm64          |      |
+| java25-jdk    | 25           | Ubuntu | Hotspot+JDK | amd64, arm64          |      |
+| java25-graalvm | 25          | Oracle | Oracle GraalVM | amd64, arm64       | (2)(3) |
+| java21        | 21           | Ubuntu | Hotspot     | amd64, arm64          |      |
+| java21-jdk    | 21           | Ubuntu | Hotspot+JDK | amd64, arm64          |      |
+| java21-alpine | 21           | Alpine | Hotspot     | amd64, arm64          |      |
+| java21-graalvm | 21          | Oracle | Oracle GraalVM | amd64, arm64       | (2)(3) |
+| java17        | 17           | Ubuntu | Hotspot     | amd64, arm64, armv7   |      |
+| java17-graalvm | 17          | Oracle | Oracle GraalVM | amd64, arm64       | (2)(3) |
+| java16        | 16           | Ubuntu | Hotspot     | amd64, arm64, armv7   | (1)  |
+| java11        | 11           | Ubuntu | Hotspot     | amd64, arm64, armv7   |      |
+| java8         | 8            | Ubuntu | Hotspot     | amd64, arm64, armv7   |      |
 
-1. Why no arm64 for Java 17 Alpine? That is because the base images, such as [elipse-temurin](https://hub.docker.com/_/eclipse-temurin/tags?page=&page_size=&ordering=&name=17-jre-alpine) do not provide support for that. Use the Ubuntu based images instead.
+Notes
+
+1. This version of Java is [recommended for PaperMC 1.16.5](https://docs.papermc.io/paper/getting-started/#requirements)
+2. Based on the [Oracle GraalVM images](https://blogs.oracle.com/java/post/new-oracle-graalvm-container-images), which as of JDK 17, are now under the [GraalVM Free License](https://blogs.oracle.com/java/post/graalvm-free-license) incorporating what used to be known as the GraalVM Enterprise.
+3. Due to these images using Oracle Linux, (which is based on Red Hat Enterprise Linux) Forge Installer will not work due to its use of zlib-ng. Use other images for initial installation and Forge version upgrade.
 
 !!! example "Example using java8"
 
@@ -74,7 +78,7 @@ where `java tag` still refers to the first column of the table above and `releas
 
 ### Stable image tag
 
-The `stable` image tag combines the benefits of `latest` and [release versions](#release-versions) since it shifts to refer to the most recently released version.
+The `stable` image tag combines the benefits of `latest` and [release versions](#release-versions) since it shifts to refer to the most recently released version. There is also a per-variant stable tag, formatted as `stable-{variant}`.
 
 ## Version compatibilities
 
@@ -107,7 +111,11 @@ Caused by: org.spongepowered.asm.mixin.throwables.ClassMetadataNotFoundException
 
 #### Java 8
 
-For Forge versions less than 1.18, you _must_ use the `java8-multiarch` (or other java8) image tag.
+For Forge versions less than 1.18, you _must_ use the `java8` (or other java8) image tag.
+
+!!! warning "Java 8 is in maintenance mode"
+
+    The `java8` / `java8-jdk` tags, and other pre-Java 17 tags (`java11`, `java16`), pin an older `mc-image-helper` that predates the baked-in CurseForge API key. `AUTO_CURSEFORGE` and `CURSEFORGE_FILES` on those images require you to set `CF_API_KEY` yourself. Java 17+ images include a key and do not need this.
 
 In general, if you see the following line in a server startup failure, then it means you need to be using Java 8 instead of the latest image Java version:
 
@@ -122,16 +130,23 @@ Forge also doesn't support openj9 JVM implementation.
 
 The following image tags have been deprecated and are no longer receiving updates:
 
-- java19
 - adopt13
 - adopt14
 - adopt15
 - openj9-nightly
 - multiarch-latest
-- java16/java16-openj9
+- java16-openj9
 - java17-graalvm-ce
 - java17-openj9
+- java17-alpine
+- java19
 - java20-graalvm, java20, java20-alpine
+- java23-*
+- java24, java24-graalvm 
 - java8-multiarch is still built and pushed, but please move to java8 instead
+- java8-alpine, java8-jdk, java8-openj9, java8-graalvm-ce
 
-[^1]: Based on the [Oracle GraalMV images](https://blogs.oracle.com/java/post/new-oracle-graalvm-container-images), which as of JDK 17, are now under the [GraalVM Free License](https://blogs.oracle.com/java/post/graalvm-free-license) incorporating what used to be known as the GraalVM Enterprise. 
+## JSON Listing
+
+
+Information about the image tags is available for programmatic access at <https://raw.githubusercontent.com/itzg/docker-minecraft-server/refs/heads/master/images.json>

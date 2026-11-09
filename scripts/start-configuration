@@ -3,10 +3,11 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # shellcheck source=start-utils
-. "${SCRIPTS:-/}start-utils"
+. "$(dirname "$0")/start-utils"
 
 : "${EULA:=}"
 : "${PROXY:=}"
+: "${PREFER_IPV6:=false}"
 : "${ENABLE_AUTOPAUSE:=false}"
 : "${ENABLE_AUTOSTOP:=false}"
 : "${RCON_CMDS_STARTUP:=}"
@@ -28,18 +29,29 @@ shopt -s nullglob
 
 isDebugging && set -x
 
-#umask 002
+if isTrue "$PREFER_IPV6"; then
+  MC_IMAGE_HELPER_OPTS+="-Djava.net.preferIPv6Addresses=true -Djava.net.preferIPv6Stack=true"
+  export MC_IMAGE_HELPER_OPTS
+  JVM_DD_OPTS+="java.net.preferIPv6Addresses=true java.net.preferIPv6Stack=true"
+  export JVM_DD_OPTS
+fi
+
+if [[ $(getDistro) == alpine ]]; then
+  export LD_PRELOAD=/lib/libgcompat.so.0
+fi
+
 export HOME=/data
 
 log "Running as uid=$(id -u) gid=$(id -g) with /data as '$(ls -lnd /data)'"
+log "Image info: $(paste -d, -s /etc/image.properties)"
 
 if [ ! -e /data/eula.txt ]; then
   if ! isTrue "$EULA"; then
     log ""
-    log "Please accept the Minecraft EULA at"
-    log "  https://account.mojang.com/documents/minecraft_eula"
-    log "by adding the following immediately after 'docker run':"
-    log "  -e EULA=TRUE"
+    logError "Please accept the Minecraft EULA at"
+    logError "  https://account.mojang.com/documents/minecraft_eula"
+    logError "by adding the following immediately after 'docker run':"
+    logError "  -e EULA=TRUE"
     log ""
     exit 1
   fi
@@ -49,8 +61,8 @@ fi
 
 if isTrue "${DEBUG_MEMORY:-false}"; then
   log "Memory usage and availability (in MB)"
-  uname -a
-  free -m
+  uname -pars | applyLogPrefix
+  free -m | applyLogPrefix
 fi
 
 ##########################################
@@ -63,10 +75,10 @@ if isTrue "${ENABLE_RCON:-true}"; then
   if [[ -v RCON_PASSWORD_FILE ]]; then
     if [ ! -e "${RCON_PASSWORD_FILE}" ]; then
       log ""
-      log "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
-      log "Please ensure your configuration."
-      log "If you are using Docker Secrets feature, please check this for further information: "
-      log " https://docs.docker.com/engine/swarm/secrets"
+      logError "Initial RCON password file ${RCON_PASSWORD_FILE} does not seems to exist."
+      logError "Please ensure your configuration."
+      logError "If you are using Docker Secrets feature, please check this for further information: "
+      logError " https://docs.docker.com/engine/swarm/secrets"
       log ""
       exit 1
     else
@@ -90,31 +102,44 @@ fi
 ##########################################
 # Auto-pause/stop
 
-if isTrue "${ENABLE_AUTOPAUSE}" && isTrue "${EXEC_DIRECTLY:-false}"; then
-    log "EXEC_DIRECTLY=true is incompatible with ENABLE_AUTOPAUSE=true"
-    exit 1
-fi
-
 if isTrue "${ENABLE_AUTOPAUSE}" && isTrue "${ENABLE_AUTOSTOP}"; then
-    log "ENABLE_AUTOPAUSE=true is incompatible with ENABLE_AUTOSTOP=true"
+    logError "ENABLE_AUTOPAUSE=true is incompatible with ENABLE_AUTOSTOP=true"
     exit 1
 fi
 
+proxyArgs=()
 if [[ $PROXY ]]; then
     export http_proxy="$PROXY"
     export https_proxy="$PROXY"
-    export JAVA_TOOL_OPTIONS+="-Djava.net.useSystemProxies=true"
-    log "INFO: Giving proxy time to startup..."
-    sleep 5
+
+    IFS=":"
+    read -ra parts <<< "$PROXY"
+    IFS=" "
+    : "${PROXY_HOST=$(firstArrayElement parts)}"
+    shiftArray parts
+    : "${PROXY_PORT=$(firstArrayElement parts)}"
 fi
+
+# https://docs.oracle.com/javase/7/docs/api/java/net/doc-files/net-properties.html
+proxyArgs=()
+function addToProxyArgs() {
+  if [[ $2 ]]; then
+    proxyArgs+=("-D$1=$2")
+  fi
+}
+addToProxyArgs http.proxyHost "${PROXY_HOST:-}"
+addToProxyArgs http.proxyPort "${PROXY_PORT:-}"
+addToProxyArgs http.nonProxyHosts "${PROXY_NON_PROXY_HOSTS:-}"
+LOCAL_IFS=$IFS; IFS=' '; MC_IMAGE_HELPER_OPTS+=" ${proxyArgs[*]}"; IFS=$LOCAL_IFS
+export MC_IMAGE_HELPER_OPTS
 
 function fixJavaPath() {
   # Some Docker management UIs grab all the image declared variables and present them for configuration.
-  # When upgrading images across Java versions, that creates a mismatch in PATH's expected by base image.
+  # When upgrading images across Java versions, that creates parts mismatch in PATH's expected by base image.
   if ! which java > /dev/null; then
-    log "ERROR: your Docker provider has an annoying flaw where it"
-    log "       tries to set PATH even though the container establishes"
-    log "       a very specific value."
+    logError "       Your Docker provider has an annoying flaw where it"
+    logError "       tries to set PATH even though the container establishes"
+    logError "       parts very specific value."
     sleep 2
     # now find where java might be
     for d in /opt/java/openjdk/bin /usr/bin; do
@@ -129,62 +154,118 @@ function fixJavaPath() {
 
 
 if ! fixJavaPath; then
-  log "ERROR: could not locate path that contains java"
+  logError "could not locate path that contains java"
   exit 1
 fi
 
 cd /data || exit 1
 
+##########################################
+# Optionally load environment variables from a file or archive entry,
+# allowing packs/artifacts to declare TYPE, VERSION and other settings
+# inside-out. Loaded values override anything passed in through docker -e.
+# Generic packs are processed first so that LOAD_ENV_FROM_FILE and
+# LOAD_ENV_FROM_ARCHIVE can override any values they set.
+
+if isTrue "${LOAD_ENV_FROM_GENERIC_PACK:-false}"; then
+  if ! loadEnvFromGenericPack; then
+    exit 1
+  fi
+fi
+
+if [[ ${LOAD_ENV_FROM_FILE:-} ]]; then
+  if ! loadEnvFromFile "${LOAD_ENV_FROM_FILE}"; then
+    exit 1
+  fi
+fi
+
+if [[ ${LOAD_ENV_FROM_ARCHIVE:-} ]]; then
+  if ! loadEnvFromArchive "${LOAD_ENV_FROM_ARCHIVE}" "${LOAD_ENV_FROM_ARCHIVE_ENTRY:-.env}"; then
+    exit 1
+  fi
+fi
+
 export DECLARED_TYPE=${TYPE^^}
 export DECLARED_VERSION="$VERSION"
 
+if isTrue "${VERSION_FROM_MODRINTH_PROJECTS:-}" && [[ ${MODRINTH_PROJECTS:-} ]]; then
+  args=()
+  if [[ ${MODRINTH_PROJECTS_DEFAULT_VERSION_TYPE:-} ]]; then
+    args+=(--allowed-version-type "${MODRINTH_PROJECTS_DEFAULT_VERSION_TYPE:-}")
+  fi
+  if ! VERSION=$(mc-image-helper version-from-modrinth-projects "${args[@]}" --projects "${MODRINTH_PROJECTS}"); then
+    logError "failed to resolve version from MODRINTH_PROJECTS: ${MODRINTH_PROJECTS}"
+    exit 1
+  fi
+  log "Resolved Minecraft version $VERSION from Modrinth projects"
+  export VERSION
+fi
+
 if isTrue "${ENABLE_AUTOPAUSE}"; then
-  "${SCRIPTS:-/}start-autopause"
+  if [[ -n "${MAX_TICK_TIME:-}" && "$MAX_TICK_TIME" != "-1" ]] ; then
+    logWarning "MAX_TICK_TIME is non-default, for autopause to work properly, this check should be disabled (-1 for versions >= 1.8.1)"
+  elif [[ -z "${MAX_TICK_TIME:-}" ]] ; then
+    MAX_TICK_TIME=-1
+    if versionLessThan 1.8.1; then
+      # 10 years
+      MAX_TICK_TIME=315360000000
+    fi
+    export MAX_TICK_TIME
+  fi
+  # Keep the default in this process so it reaches server.properties setup.
+  "$(dirname "$0")/start-autopause"
+elif isTrue "${ENABLE_AUTOSTOP}"; then
+  "$(dirname "$0")/start-autostop"
 fi
 
-if isTrue "${ENABLE_AUTOSTOP}"; then
-  "${SCRIPTS:-/}start-autostop"
-fi
-
-if 
+if
   [[ "$RCON_CMDS_STARTUP" ]] ||
   [[ "$RCON_CMDS_ON_CONNECT" ]] ||
-  [[ "$RCON_CMDS_ON_DISCONNECT" ]] || 
-  [[ "$RCON_CMDS_FIRST_CONNECT" ]] || 
+  [[ "$RCON_CMDS_ON_DISCONNECT" ]] ||
+  [[ "$RCON_CMDS_FIRST_CONNECT" ]] ||
   [[ "$RCON_CMDS_LAST_DISCONNECT" ]]
 then
   log "Starting RCON commands"
   # shellcheck source=start-rconcmds
-  "${SCRIPTS:-/}start-rconcmds"
+  "$(dirname "$0")/start-rconcmds"
 fi
 
-: "${MOD_PLATFORM:=}"
+: "${MODPACK_PLATFORM:=${MOD_PLATFORM:-}}"
+
+if [[ $MODPACK_PLATFORM && $TYPE && $TYPE != VANILLA ]]; then
+  logWarning "Avoid setting TYPE and MODPACK_PLATFORM"
+fi
+
 case "${TYPE^^}" in
-  AUTO_CURSEFORGE|MODRINTH|CURSEFORGE|FTB|FTBA)
-    MOD_PLATFORM="$TYPE"
+  AUTO_CURSEFORGE|MODRINTH|CURSEFORGE|FTB|FTBA|GTNH)
+    MODPACK_PLATFORM="$TYPE"
   ;;
 esac
 
-if [[ $MOD_PLATFORM ]]; then
-  case "${MOD_PLATFORM^^}" in
+if [[ $MODPACK_PLATFORM ]]; then
+  case "${MODPACK_PLATFORM^^}" in
     FTB|CURSEFORGE)
-      exec "${SCRIPTS:-/}start-deployCF" "$@"
+      exec "$(dirname "$0")/start-deployCF" "$@"
     ;;
 
     FTBA)
-      exec "${SCRIPTS:-/}start-deployFTBA" "$@"
+      exec "$(dirname "$0")/start-deployFTBA" "$@"
     ;;
 
     AUTO_CURSEFORGE)
-      exec "${SCRIPTS:-/}start-deployAutoCF" "$@"
+      exec "$(dirname "$0")/start-deployAutoCF" "$@"
       ;;
 
     MODRINTH)
-      exec "${SCRIPTS:-/}start-deployModrinth" "$@"
+      exec "$(dirname "$0")/start-deployModrinth" "$@"
+      ;;
+
+    GTNH)
+      exec "$(dirname "$0")/start-deployGTNH" "$@"
       ;;
 
     *)
-      log "ERROR; Invalid MOD_PLATFORM: '$MOD_PLATFORM'"
+      logError "Invalid MODPACK_PLATFORM: '$MODPACK_PLATFORM'"
       exit 1
       ;;
   esac
@@ -193,90 +274,111 @@ fi
 log "Resolving type given ${TYPE}"
 case "${TYPE^^}" in
   *BUKKIT|SPIGOT)
-    exec "${SCRIPTS:-/}start-deployBukkitSpigot" "$@"
+    exec "$(dirname "$0")/start-deployBukkitSpigot" "$@"
   ;;
 
   PAPER)
-    exec "${SCRIPTS:-/}start-deployPaper" "$@"
+    exec "$(dirname "$0")/start-deployPaper" "$@"
   ;;
 
   FOLIA)
-    exec "${SCRIPTS:-/}start-deployFolia" "$@"
+    exec "$(dirname "$0")/start-deployFolia" "$@"
   ;;
 
   FORGE)
-    exec "${SCRIPTS:-/}start-deployForge" "$@"
+    exec "$(dirname "$0")/start-deployForge" "$@"
+  ;;
+
+  CLEANROOM)
+    exec "$(dirname "$0")/start-deployCleanroom" "$@"
   ;;
 
   NEOFORGE|NEOFORGED)
-    exec "${SCRIPTS:-/}start-deployNeoForge" "$@"
+    exec "$(dirname "$0")/start-deployNeoForge" "$@"
   ;;
 
   FABRIC)
-    exec "${SCRIPTS:-/}start-deployFabric" "$@"
+    exec "$(dirname "$0")/start-deployFabric" "$@"
   ;;
 
   QUILT)
-    exec "${SCRIPTS:-/}start-deployQuilt" "$@"
+    exec "$(dirname "$0")/start-deployQuilt" "$@"
   ;;
-  
+
   VANILLA)
-    exec "${SCRIPTS:-/}start-deployVanilla" "$@"
+    exec "$(dirname "$0")/start-deployVanilla" "$@"
   ;;
 
   SPONGEVANILLA)
-    exec "${SCRIPTS:-/}start-deploySpongeVanilla" "$@"
+    exec "$(dirname "$0")/start-deploySpongeVanilla" "$@"
   ;;
 
   CUSTOM)
-    exec "${SCRIPTS:-/}start-deployCustom" "$@"
+    exec "$(dirname "$0")/start-deployCustom" "$@"
   ;;
 
   MAGMA)
-    exec "${SCRIPTS:-/}start-deployMagma" "$@"
+    exec "$(dirname "$0")/start-deployMagma" "$@"
   ;;
 
   MAGMA_MAINTAINED)
-    exec "${SCRIPTS:-/}start-deployMagmaMaintained" "$@"
+    exec "$(dirname "$0")/start-deployMagmaMaintained" "$@"
   ;;
 
   KETTING)
-    exec "${SCRIPTS:-/}start-deployKetting" "$@"
+    exec "$(dirname "$0")/start-deployKetting" "$@"
   ;;
 
-  MOHIST)
-    exec "${SCRIPTS:-/}start-deployMohist" "$@"
-  ;;
-
-  CATSERVER)
-    exec "${SCRIPTS:-/}start-deployCatserver" "$@"
+  MOHIST|YOUER|BANNER)
+    exec "$(dirname "$0")/start-deployMohist" "$@"
   ;;
 
   PURPUR)
-    exec "${SCRIPTS:-/}start-deployPurpur" "$@"
+    exec "$(dirname "$0")/start-deployPurpur" "$@"
   ;;
 
   PUFFERFISH)
-    exec "${SCRIPTS:-/}start-deployPufferfish" "$@"
+    exec "$(dirname "$0")/start-deployPufferfish" "$@"
   ;;
 
   CANYON)
-    exec "${SCRIPTS:-/}start-deployCanyon" "$@"
+    exec "$(dirname "$0")/start-deployCanyon" "$@"
   ;;
 
   LIMBO)
-    exec "${SCRIPTS:-/}start-deployLimbo" "$@"
+    exec "$(dirname "$0")/start-deployLimbo" "$@"
+  ;;
+
+  NANOLIMBO)
+    exec "$(dirname "$0")/start-deployNanoLimbo" "$@"
+  ;;
+
+  PUMPKIN)
+    exec "$(dirname "$0")/start-deployPumpkin" "$@"
   ;;
 
   CRUCIBLE)
-    exec "${SCRIPTS:-/}start-deployCrucible" "$@"
+    exec "$(dirname "$0")/start-deployCrucible" "$@"
+  ;;
+
+  LEAF)
+    exec "$(dirname "$0")/start-deployLeaf" "$@"
+  ;;
+
+  ARCLIGHT)
+    exec "$(dirname "$0")/start-deployArcLight" "$@"
+  ;;
+
+  POSEIDON)
+    exec "$(dirname "$0")/start-deployPoseidon" "$@"
   ;;
 
   *)
-      log "ERROR: Invalid TYPE: '$TYPE'"
-      log "Must be: VANILLA, FORGE, BUKKIT, SPIGOT, PAPER, FOLIA, PURPUR, FABRIC, QUILT,"
-      log "         SPONGEVANILLA, CUSTOM, MAGMA, MOHIST, CATSERVER, AIRPLANE, PUFFERFISH,"
-      log "         CANYON, LIMBO, CRUCIBLE"
+      logError "Invalid TYPE: '$TYPE'"
+      logError "Must be: VANILLA, FORGE, BUKKIT, SPIGOT, PAPER, FOLIA, PURPUR, FABRIC, QUILT,"
+      logError "         SPONGEVANILLA, CUSTOM, MAGMA, MOHIST, GTNH, AIRPLANE, PUFFERFISH,"
+      logError "         CANYON, LIMBO, NANOLIMBO, PUMPKIN, CRUCIBLE, LEAF, YOUER, BANNER, NEOFORGE,"
+      logError "         CLEANROOM"
       exit 1
   ;;
 

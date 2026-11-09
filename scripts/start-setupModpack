@@ -3,28 +3,35 @@
 set -e -o pipefail
 
 : "${REMOVE_OLD_MODS:=false}"
-: "${MODS:=}"
 : "${MODS_OUT_DIR:=/data/mods}"
 : "${MODS_FILE:=}"
-: "${PLUGINS:=}"
 : "${PLUGINS_OUT_DIR:=/data/plugins}"
 : "${PLUGINS_FILE:=}"
 : "${REMOVE_OLD_MODS_DEPTH:=1} "
 : "${REMOVE_OLD_MODS_INCLUDE:=*.jar,*-version.json}"
-sum_file=/data/.generic_pack.sum
+: "${REMOVE_OLD_CONFIGS:=false}"
+: "${CONFIG_OUT_DIR:=/data/config}"
+: "${REMOVE_OLD_CONFIGS_DEPTH:=16}"
+: "${REMOVE_OLD_CONFIGS_INCLUDE:=*}"
+: "${REMOVE_OLD_CONFIGS_EXCLUDE:=}"
+: "${CF_USE_HTTP2:=false}" # CF downloads are faster with HTTP 1.1
+: "${MODRINTH_LOADER:=}"
 
 # shellcheck source=start-utils
-. "${SCRIPTS:-/}start-utils"
+. "$(dirname "$0")/start-utils"
+
 isDebugging && set -x
 
-#  CURSE_URL_BASE used in manifest downloads below
-CURSE_URL_BASE=${CURSE_URL_BASE:-https://minecraft.curseforge.com/projects}
-
+sum_file=/data/.generic_pack.sum
 # Remove old mods/plugins
 if isTrue "${REMOVE_OLD_MODS}" && [ -z "${MODS_FILE}" ]; then
   removeOldMods "$MODS_OUT_DIR"
   removeOldMods "$PLUGINS_OUT_DIR"
   rm -f "$sum_file"
+fi
+
+if isTrue "${REMOVE_OLD_CONFIGS}"; then
+  removeOldConfigs "$CONFIG_OUT_DIR"
 fi
 
 function handlePackwiz() {
@@ -34,14 +41,24 @@ function handlePackwiz() {
                            --maven-repo=https://maven.packwiz.infra.link/repository/release/ \
                            --group=link.infra.packwiz --artifact=packwiz-installer --classifier=dist \
                            --skip-existing); then
-      log "ERROR: failed to get packwiz installer"
+      logError "Failed to get packwiz installer"
       exit 1
     fi
 
     log "Running packwiz installer against URL: ${PACKWIZ_URL}"
     if ! java -cp "${packwizInstaller}" link.infra.packwiz.installer.Main -s server "${PACKWIZ_URL}"; then
-      log "ERROR failed to run packwiz installer"
+      logError "Failed to run packwiz installer"
       exit 1
+    fi
+
+    # packwiz may have just downloaded/updated the env file referenced by
+    # LOAD_ENV_FROM_FILE. The initial load in start-configuration happened
+    # before this point, so re-load it now to pick up the pack's values for
+    # the remaining setup stages (server.properties, JVM args, etc.).
+    if [[ ${LOAD_ENV_FROM_FILE:-} ]]; then
+      if ! loadEnvFromFile "${LOAD_ENV_FROM_FILE}"; then
+        exit 1
+      fi
     fi
   fi
 }
@@ -52,28 +69,30 @@ if [[ "$MODPACK" ]]; then
   if isURL "${MODPACK}"; then
     log "Downloading mod/plugin pack"
     if ! get -o /tmp/modpack.zip "${MODPACK}"; then
-      log "ERROR: failed to download from ${MODPACK}"
+      logError "Failed to download from ${MODPACK}"
       exit 2
     fi
   elif [[ "$MODPACK" =~ .*\.zip ]]; then
     if ! cp "$MODPACK" /tmp/modpack.zip; then
-      log "ERROR: failed to copy from $MODPACK"
+      logError "Failed to copy from $MODPACK"
       exit 2
     fi
   else
-    log "ERROR Invalid URL or Path given for MODPACK: $MODPACK"
+    logError "Invalid URL or Path given for MODPACK: $MODPACK"
     exit 1
   fi
 
   if [ "$FAMILY" = "SPIGOT" ]; then
     mkdir -p "$PLUGINS_OUT_DIR"
     if ! unzip -o -d "$PLUGINS_OUT_DIR" /tmp/modpack.zip; then
-      log "ERROR: failed to unzip the modpack from ${MODPACK}"
+      logError "Failed to unzip the modpack from ${MODPACK}"
+      exit 2
     fi
   else
     mkdir -p "$MODS_OUT_DIR"
     if ! unzip -o -d "$MODS_OUT_DIR" /tmp/modpack.zip; then
-      log "ERROR: failed to unzip the modpack from ${MODPACK}"
+      logError "Failed to unzip the modpack from ${MODPACK}"
+      exit 2
     fi
   fi
   rm -f /tmp/modpack.zip
@@ -82,7 +101,7 @@ fi
 
 function handleListings() {
   if usesMods && usesPlugins; then
-      if [[ "$MODS" ]]; then
+      if [[ -v MODS ]]; then
 
         ensureRemoveAllModsOff "MODS is set"
 
@@ -93,7 +112,7 @@ function handleListings() {
           --to="$MODS_OUT_DIR" \
           "$MODS"
       fi
-      if [[ "$PLUGINS" ]]; then
+      if [[ -v PLUGINS ]]; then
         ensureRemoveAllModsOff "PLUGINS is set"
         mkdir -p "$PLUGINS_OUT_DIR"
         mc-image-helper mcopy \
@@ -128,14 +147,14 @@ function handleListings() {
       outDir="$PLUGINS_OUT_DIR"
     fi
 
-    if [[ "$MODS" || "$PLUGINS" ]]; then
+    if [[ -v MODS || -v PLUGINS ]]; then
       ensureRemoveAllModsOff "MODS or PLUGINS is set"
       mkdir -p "$outDir"
       mc-image-helper mcopy \
         --glob=*.jar \
         --scope=var-list \
         --to="$outDir" \
-        "$MODS" "$PLUGINS"
+        "${MODS:-}" "${PLUGINS:-}"
     fi
 
     if [[ "$MODS_FILE" || "$PLUGINS_FILE" ]]; then
@@ -155,6 +174,7 @@ function handleGenericPacks() {
   : "${GENERIC_PACKS:=${GENERIC_PACK}}"
   : "${GENERIC_PACKS_PREFIX:=}"
   : "${GENERIC_PACKS_SUFFIX:=}"
+  : "${GENERIC_PACKS_DISABLE_MODS:=}"
 
   if [[ "${GENERIC_PACKS}" ]]; then
     IFS=',' read -ra packs <<< "${GENERIC_PACKS}"
@@ -162,11 +182,42 @@ function handleGenericPacks() {
     packFiles=()
     for packEntry in "${packs[@]}"; do
       pack="${GENERIC_PACKS_PREFIX}${packEntry}${GENERIC_PACKS_SUFFIX}"
-      if isURL "${pack}"; then
+      if isOCIRef "${pack}"; then
+        # All OCI refs share one staging dir so layers common to multiple
+        # sibling artifacts (the point of layered distribution) are pulled
+        # exactly once across all of GENERIC_PACKS.
+        mkdir -p /data/packs/oci /data/.tmp
+        log "Pulling OCI generic pack from $pack"
+        # A list file is used rather than stdout because mc-image-helper INFO
+        # logs share that stream; it holds one absolute layer path per line in
+        # apply order.
+        layerListFile=$(mktemp -p /data/.tmp)
+        ociArgs=(install-oci-pack
+          --ref "$pack"
+          --output-directory /data/packs/oci
+          --filename-strategy digest
+          --layer-list-file "$layerListFile")
+        if [[ "${GENERIC_PACKS_OCI_AUTH_FILE:-}" ]]; then
+          ociArgs+=(--auth-file "${GENERIC_PACKS_OCI_AUTH_FILE}")
+        fi
+        if ! mc-image-helper "${ociArgs[@]}"; then
+          logError "Failed to pull OCI generic pack $pack"
+          logError "(OCI generic packs require mc-image-helper with install-oci-pack support)"
+          rm -f "$layerListFile"
+          exit 2
+        fi
+        mapfile -t ociLayers < "$layerListFile"
+        rm -f "$layerListFile"
+        if [ ${#ociLayers[@]} -eq 0 ]; then
+          logError "OCI generic pack $pack resolved to zero layers"
+          exit 2
+        fi
+        packFiles+=("${ociLayers[@]}")
+      elif isURL "${pack}"; then
         mkdir -p /data/packs
         log "Downloading generic pack from $pack"
         if ! outfile=$(get -o /data/packs --output-filename --skip-up-to-date "$pack"); then
-          log "ERROR: failed to download $pack"
+          logError "Failed to download $pack"
           exit 2
         fi
         packFiles+=("$outfile")
@@ -192,6 +243,12 @@ function handleGenericPacks() {
         extract "${pack}" "${base_dir}"
       done
 
+      # Disable mods
+      for mod in ${GENERIC_PACKS_DISABLE_MODS}; do
+        log Disabling $mod
+        find "${base_dir}" -name "$mod" -exec mv {} {}.disabled -v \;
+      done
+
       # Remove any eula file since container manages it
       rm -f "${base_dir}/eula.txt"
 
@@ -200,7 +257,7 @@ function handleGenericPacks() {
           --max-depth=3 --type=directory --name=mods,plugins,config \
           --only-shallowest --fail-no-matches --format '%h' \
           "$base_dir"); then
-        log "ERROR: Unable to find content base of generic packs ${GENERIC_PACKS}. Directories:"
+        logError "Unable to find content base of generic packs ${GENERIC_PACKS}. Directories:"
         mc-image-helper find --name=* --max-depth=3 --type=directory --format '- %P' "$original_base_dir"
         exit 1
       fi
@@ -236,32 +293,49 @@ function handleGenericPacks() {
 }
 
 function handleModrinthProjects() {
-  : "${MODRINTH_PROJECTS:=}"
-  : "${MODRINTH_ALLOWED_VERSION_TYPE:=release}"
+  # need to be backward compatible with old variable name, MODRINTH_ALLOWED_VERSION_TYPE
+  : "${MODRINTH_PROJECTS_DEFAULT_VERSION_TYPE:=${MODRINTH_ALLOWED_VERSION_TYPE:-release}}"
   : "${MODRINTH_DOWNLOAD_DEPENDENCIES:=none}"
   if [[ -v MODRINTH_DOWNLOAD_OPTIONAL_DEPENDENCIES ]]; then
-    log "WARNING The variable MODRINTH_DOWNLOAD_OPTIONAL_DEPENDENCIES is removed."
-    log "        Use MODRINTH_DOWNLOAD_DEPENDENCIES=optional instead"
+    logWarning "The variable MODRINTH_DOWNLOAD_OPTIONAL_DEPENDENCIES is removed."
+    logWarning "        Use MODRINTH_DOWNLOAD_DEPENDENCIES=optional instead"
   fi
 
-  if [[ $MODRINTH_PROJECTS ]] && isFamily HYBRID FORGE FABRIC SPIGOT; then
-    if isFamily HYBRID; then
+  if [[ -v MODRINTH_PROJECTS ]]; then
+
+    if isType CUSTOM; then
+      if ! [[ $MODRINTH_LOADER ]]; then
+        logError "MODRINTH_LOADER must be set when using TYPE=CUSTOM and MODRINTH_PROJECTS"
+        exit 1
+      fi
+      loader="${MODRINTH_LOADER,,}"
+    elif isFamily HYBRID; then
+      loader=${HYBRIDTYPE}
+    elif isFamily VANILLA; then
+      loader=datapack
+    elif isType NEOFORGE; then
+      loader=neoforge
+    elif isFamily FORGE; then
       loader=forge
     else
       loader="${TYPE,,}"
     fi
+
     mc-image-helper modrinth \
       --output-directory=/data \
+      --world-directory="${LEVEL:-world}" \
       --projects="${MODRINTH_PROJECTS}" \
       --game-version="${VERSION}" \
       --loader="$loader" \
       --download-dependencies="$MODRINTH_DOWNLOAD_DEPENDENCIES" \
-      --allowed-version-type="$MODRINTH_ALLOWED_VERSION_TYPE"
+      --allowed-version-type="$MODRINTH_PROJECTS_DEFAULT_VERSION_TYPE"
   fi
 }
 
 function handleCurseForgeFiles() {
-  args=()
+  args=(
+    --use-http2="$CF_USE_HTTP2"
+  )
   if usesMods && ! usesPlugins; then
     args+=(--default-category mc-mods)
   elif usesPlugins && ! usesMods; then
@@ -269,14 +343,17 @@ function handleCurseForgeFiles() {
   fi
 
   case "${TYPE,,}" in
-    forge|fabric|quilt)
+    forge|neoforge|fabric|quilt)
       args+=(--mod-loader "$TYPE")
+      ;;
+    cleanroom)
+      args+=(--mod-loader forge)
       ;;
     *)
       if isFamily HYBRID; then
         # To disambiguate mc-mods we'll assume that hybrid servers
         # are blending Forge (rather than Fabric or NeoForge)
-        args+=(--mod-loader "forge")
+        args+=(--mod-loader "${HYBRIDTYPE}")
       fi
       ;;
   esac
@@ -285,7 +362,7 @@ function handleCurseForgeFiles() {
   # since we want CURSEFORGE_FILES to expand
   mc-image-helper curseforge-files \
     "${args[@]}" \
-    ${CURSEFORGE_FILES}
+    "${CURSEFORGE_FILES}"
 }
 
 handlePackwiz
@@ -295,14 +372,14 @@ handleModpackZip
 handleListings
 
 if [[ $MANIFEST ]]; then
-  log "ERROR: MANIFEST is no longer supported."
-  log "       Use MOD_PLATFORM=AUTO_CURSEFORGE and CF_MODPACK_MANIFEST instead"
+  logError "MANIFEST is no longer supported."
+  logError "       Use MODPACK_PLATFORM=AUTO_CURSEFORGE and CF_MODPACK_MANIFEST instead"
   exit 1
 fi
 
 if [[ $MODS_FORGEAPI_KEY || $MODS_FORGEAPI_FILE || $MODS_FORGEAPI_PROJECTIDS ]]; then
-  log "ERROR the MODS_FORGEAPI_FILE / MODS_FORGEAPI_PROJECTIDS feature is no longer supported"
-  log "      Use CURSEFORGE_FILES instead."
+  logError "The MODS_FORGEAPI_FILE / MODS_FORGEAPI_PROJECTIDS feature is no longer supported"
+  logError "      Use CURSEFORGE_FILES instead."
   exit 1
 fi
 
@@ -336,4 +413,13 @@ case "X$MODCONFIG" in
 esac
 fi
 
-exec "${SCRIPTS:-/}start-setupMounts" "$@"
+if isTrue "${APPLY_CLEANROOM}"; then
+  if [[ "$VERSION" != "1.12.2" ]]; then
+    logError "Cleanroom only works with Minecraft version 1.12.2. Current version is $VERSION."
+    exit 1
+  fi
+  # run within the current shell to retain exported environment variables
+  . "$(dirname "$0")/start-applyCleanroom"
+fi
+
+exec "$(dirname "$0")/start-setupMounts" "$@"

@@ -2,7 +2,7 @@
 set -eu
 
 # shellcheck source=start-utils
-. "${SCRIPTS:-/}start-utils"
+. "$(dirname "$0")/start-utils"
 
 resultsFile=/data/.install-modrinth.env
 
@@ -14,15 +14,16 @@ resultsFile=/data/.install-modrinth.env
 : "${MODRINTH_FORCE_INCLUDE_FILES=}"
 : "${MODRINTH_OVERRIDES_EXCLUSIONS=}"
 : "${MODRINTH_DEFAULT_EXCLUDE_INCLUDES=/image/modrinth-exclude-include.json}"
+: "${MODRINTH_FORCE_MODLOADER_REINSTALL:=${FORCE_MODLOADER_REINSTALL:-false}}"
 
 if [[ ! $MODRINTH_MODPACK ]]; then
-  log "ERROR: MODRINTH_MODPACK must be set when using TYPE/MOD_PLATFORM of MODRINTH"
+  logError "MODRINTH_MODPACK must be set when using TYPE/MODPACK_PLATFORM/MOD_PLATFORM of MODRINTH"
   exit 1
 fi
 
 isDebugging && set -x
 
-ensureRemoveAllModsOff "MOD_PLATFORM=MODRINTH"
+ensureRemoveAllModsOff "MODPACK_PLATFORM=MODRINTH"
 
 args=(
   --results-file="$resultsFile"
@@ -33,16 +34,20 @@ args=(
 if [[ $MODRINTH_IGNORE_MISSING_FILES ]]; then
   args+=(--ignore-missing-files "$MODRINTH_IGNORE_MISSING_FILES")
 fi
+if isTrue "${MODRINTH_FORCE_MODLOADER_REINSTALL}"; then
+  args+=(--force-modloader-reinstall)
+fi
 
 case "${VERSION^^}" in
   LATEST)
-    : "${MODRINTH_DEFAULT_VERSION_TYPE:=release}"
+    # need to be backward compatible with old variable name, MODRINTH_DEFAULT_VERSION_TYPE
+    : "${MODRINTH_MODPACK_VERSION_TYPE:=${MODRINTH_DEFAULT_VERSION_TYPE:-release}}"
     ;;
   SNAPSHOT)
-    : "${MODRINTH_DEFAULT_VERSION_TYPE:=beta}"
+    : "${MODRINTH_MODPACK_VERSION_TYPE:=${MODRINTH_DEFAULT_VERSION_TYPE:-beta}}"
     ;;
   *)
-    : "${MODRINTH_DEFAULT_VERSION_TYPE:=release}"
+    : "${MODRINTH_MODPACK_VERSION_TYPE:=${MODRINTH_DEFAULT_VERSION_TYPE:-release}}"
     args+=("--game-version=$VERSION")
     ;;
 esac
@@ -57,22 +62,18 @@ setArg() {
 }
 setArg --loader MODRINTH_LOADER
 setArg --version MODRINTH_VERSION
-setArg --default-version-type MODRINTH_DEFAULT_VERSION_TYPE
+setArg --default-version-type MODRINTH_MODPACK_VERSION_TYPE
 setArg --exclude-files MODRINTH_EXCLUDE_FILES
 setArg --force-include-files MODRINTH_FORCE_INCLUDE_FILES
 setArg --overrides-exclusions MODRINTH_OVERRIDES_EXCLUSIONS
 setArg --default-exclude-includes MODRINTH_DEFAULT_EXCLUDE_INCLUDES
 
 if ! mc-image-helper install-modrinth-modpack "${args[@]}"; then
-    log "ERROR failed to install Modrinth modpack"
+    logError "Failed to installModrinth modpack"
     exit 1
 fi
 
-# grab SERVER, TYPE, VERSION and export it
-set -a
-# shellcheck disable=SC1090
-source "${resultsFile}"
-set +a
+applyResultsFile ${resultsFile}
 resolveFamily
 
-exec "${SCRIPTS:-/}start-setupWorld" "$@"
+exec "$(dirname "$0")/start-setupWorld" "$@"

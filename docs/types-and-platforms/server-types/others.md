@@ -9,7 +9,7 @@ If you want to run a specific version, you can add `-e SPONGEVERSION=1.11.2-6.1.
 Beware that current [Sponge](https://www.spongepowered.org) `STABLE` versions for Minecraft 1.12 require using [the Java 8 tag](../../versions/java.md):
 
 ``` shell
-docker run -d -v /path/on/host:/data -e TYPE=SPONGEVANILLA \
+docker run -d --pull=always -v /path/on/host:/data -e TYPE=SPONGEVANILLA \
     -p 25565:25565 -e EULA=TRUE --name mc itzg/minecraft-server:java8-multiarch
 ```
 
@@ -17,7 +17,7 @@ You can also choose to use the `EXPERIMENTAL` branch.
 Just change it with `SPONGEBRANCH`, such as:
 
 ``` shell
-$ docker run -d -v /path/on/host:/data ... \
+$ docker run -d --pull=always -v /path/on/host:/data ... \
     -e TYPE=SPONGEVANILLA -e SPONGEBRANCH=EXPERIMENTAL ...
 ```
 
@@ -39,6 +39,36 @@ Configuration options with defaults:
 
     Instead of using format codes in the MOTD, Limbo requires [JSON chat content](https://minecraft.wiki/w/Raw_JSON_text_format#Java_Edition). If a plain string is provided, which is the default, then it gets converted into the required JSON structure. 
 
+## NanoLimbo
+
+A [NanoLimbo](https://github.com/BoomEaro/NanoLimbo) server can be run by setting `TYPE` to `NANOLIMBO`.
+
+Note: it is a fork of the original [NanoLimbo](https://github.com/Nan1t/NanoLimbo) made by Nan1t
+
+An alternate Limbo server
+
+Configuration options with defaults:
+
+- `NANOLIMBO_RELEASE`=latest
+
+  The [NanoLimbo release](https://github.com/BoomEaro/NanoLimbo/releases) to download the server jar from, such as `1.13.0`.
+
+## Poseidon
+
+A [Poseidon](https://github.com/retromcorg/Project-Poseidon) server can be run by setting `TYPE` to `POSEIDON`.
+
+Poseidon is only available for b1.7.3, so be sure to set `VERSION=b1.7.3`.
+
+Configuration options with defaults:
+
+- `POSEIDON_RELEASE`=latest
+
+  The [Poseidon release](https://github.com/retromcorg/Project-Poseidon/releases) to download, such as `1.1.12-260720-1033-5303bd5`.
+
+- `POSEIDON_TYPE`=poseidon
+
+  Set to `uberbukkit` to use the [uberbukkit](https://github.com/Moresteck/uberbukkit) fork instead, whose releases are also selectable with `POSEIDON_RELEASE`.
+
 ## Crucible
 
 A [Crucible](https://github.com/CrucibleMC/Crucible) server can be run by setting `TYPE` to `CRUCIBLE`.
@@ -46,6 +76,8 @@ A [Crucible](https://github.com/CrucibleMC/Crucible) server can be run by settin
 Configuration options with defaults:
 
 - `CRUCIBLE_RELEASE`=latest
+
+  The [Crucible release](https://github.com/CrucibleMC/Crucible/releases) to run, such as `v5.4`. Since `latest` only tracks full releases, a pre-release such as a `staging-*` tag has to be named explicitly.
 
 Crucible is only available for 1.7.10, so be sure to set `VERSION=1.7.10`.
 
@@ -66,3 +98,74 @@ Alternatively, the final `-jar` invocation can be replaced by setting `CUSTOM_JA
     When using `docker run` make sure to quote the entire value since it has spaces in it, such as
 
         -e CUSTOM_JAR_EXEC="-cp worldedit.jar:Carpet-Server.jar net.minecraft.server.MinecraftServer"
+
+## Pumpkin
+
+A [Pumpkin](https://pumpkinmc.org/) server can be run by setting `TYPE` to `PUMPKIN`.
+
+Pumpkin is a Minecraft server written in Rust and is shipped as a single native executable instead of a Java jar. The image downloads the asset matching its architecture from the [latest release](https://github.com/Pumpkin-MC/Pumpkin/releases), so `VERSION` and the JVM memory and tuning variables do not apply. Set `PUMPKIN_RELEASE` to run a different release.
+
+```shell
+docker run -d --pull=always -v /path/on/host:/data \
+    -p 25565:25565 -p 19132:19132/udp -e EULA=TRUE -e TYPE=PUMPKIN \
+    --name mc itzg/minecraft-server
+```
+
+Configuration options with defaults:
+
+- `FORCE_REDOWNLOAD`=false
+
+  Set to true to re-download the executable.
+
+- `PUMPKIN_RELEASE`=latest
+
+  The [Pumpkin release](https://github.com/Pumpkin-MC/Pumpkin/releases) to run, such as `0.2.0+26.3-26.51`, or a moving prerelease channel like `nightly` or `canary`. `VERSION` selects the Minecraft version for other server types, so it is ignored here.
+
+  Each release is downloaded to `/data/pumpkin-<arch>-Linux`, and switching `PUMPKIN_RELEASE` replaces that executable. Set `FORCE_REDOWNLOAD=true` to re-download the selected release, which is useful to pick up a newer `nightly` or `canary` build.
+
+Pumpkin is configured through `/data/pumpkin.toml`. The image creates that file on the first run and updates the settings below at each startup, leaving the remaining options in your file alone. Anything without a matching environment variable can be set by editing `pumpkin.toml` directly.
+
+| Variable                                            | Pumpkin setting                                                                    |
+| :-------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| `MOTD`                                              | `networking.java.motd` and `networking.bedrock.motd`                               |
+| `MAX_PLAYERS`                                       | `networking.java.max_players` and `networking.bedrock.max_players`                 |
+| `ONLINE_MODE`                                       | `networking.java.online_mode` and `networking.bedrock.online_mode`                 |
+| `SERVER_PORT`                                       | `networking.java.address`                                                          |
+| `VIEW_DISTANCE`                                     | `networking.java.view_distance` and `networking.bedrock.view_distance`             |
+| `SIMULATION_DISTANCE`                               | `networking.java.simulation_distance` and `networking.bedrock.simulation_distance` |
+| `LEVEL`                                             | `default_level_name`                                                               |
+| `SEED`                                              | `seed`                                                                             |
+| `MODE`                                              | `default_gamemode`                                                                 |
+| `DIFFICULTY`                                        | `default_difficulty`                                                               |
+| `HARDCORE`                                          | `hardcore`                                                                         |
+| `ALLOW_NETHER`                                      | `allow_nether`                                                                     |
+| `FORCE_GAMEMODE`                                    | `force_gamemode`                                                                   |
+| `PVP`                                               | `pvp.enabled`                                                                      |
+| `OP_PERMISSION_LEVEL`                               | `op_permission_level`                                                              |
+| `SPAWN_PROTECTION`                                  | `spawn_protection`                                                                 |
+| `ACCEPTS_TRANSFERS`                                 | `accepts_transfers`                                                                |
+| `WHITELIST`, `WHITELIST_FILE` or `ENABLE_WHITELIST` | `white_list`                                                                       |
+| `ENFORCE_WHITELIST`                                 | `enforce_whitelist`                                                                |
+| `ENABLE_RCON`                                       | `networking.rcon.enabled`                                                          |
+| `RCON_PORT`                                         | `networking.rcon.address`                                                          |
+| `RCON_PASSWORD`                                     | `networking.rcon.password`                                                         |
+| `ENABLE_QUERY`                                      | `networking.query.enabled`                                                         |
+| `QUERY_PORT`                                        | `networking.query.address`                                                         |
+| `PREVENT_PROXY_CONNECTIONS`                         | `networking.java.authentication.prevent_proxy_connections`                         |
+| `RESOURCE_PACK`                                     | `resource_pack.java.url` and `resource_pack.java.enabled`                          |
+| `RESOURCE_PACK_SHA1`                                | `resource_pack.java.sha1`                                                          |
+| `RESOURCE_PACK_PROMPT`                              | `resource_pack.java.prompt_message`                                                |
+| `RESOURCE_PACK_ENFORCE`                             | `resource_pack.java.force`                                                         |
+| `LOG_LEVEL`                                         | `logging.level`                                                                    |
+
+!!! note
+
+    The first run adds every option Pumpkin knows about to `pumpkin.toml`, since Pumpkin fills in its own defaults for the settings the image does not manage.
+
+!!! note
+
+    Bedrock Edition players join on UDP port `19132`, which Pumpkin serves itself from the same world. That port has to be published, such as with `-p 19132:19132/udp`, since the image only declares `25565` with `EXPOSE`. See [examples/pumpkin](https://github.com/itzg/docker-minecraft-server/tree/master/examples/pumpkin) for a complete compose file.
+
+!!! note
+
+    Pumpkin is under heavy development, as the project itself states, so configuration and world formats can change between releases. Run it on a test server and keep backups.

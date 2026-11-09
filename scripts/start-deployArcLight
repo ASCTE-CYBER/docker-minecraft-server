@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# shellcheck source=start-utils
+. "${SCRIPTS:-$(dirname "$0")}/start-utils"
+set -o pipefail
+set -e
+isDebugging && set -x
+
+resolveVersion
+: "${ARCLIGHT_RELEASE:=latest}"
+: "${ARCLIGHT_TYPE:=neoforge}"
+
+# An omitted --release-tag means the latest release, so only pass it when a
+# specific release was requested
+arclightReleaseArgs=()
+[[ ${ARCLIGHT_RELEASE} == latest ]] || arclightReleaseArgs+=(--release-tag="${ARCLIGHT_RELEASE}")
+
+arclightRepo=IzzelAliz/Arclight
+
+log "Downloading Arclight ${VERSION} ${ARCLIGHT_TYPE,,} from the ${ARCLIGHT_RELEASE} release"
+if ! SERVER=$(mc-image-helper github download-asset \
+  "${arclightReleaseArgs[@]}" \
+  --output-directory=/data \
+  --name-pattern="^arclight-${ARCLIGHT_TYPE,,}-${VERSION}-.+\.jar$" \
+  ${arclightRepo}
+  ); then
+  logError "Failed to download Arclight jar for ${VERSION} from the ${ARCLIGHT_RELEASE} release"
+  logError "Ensure ARCLIGHT_RELEASE is one of the releases at ${arclightReleasesUrl}"
+  exit 1
+fi
+
+export SERVER
+export FAMILY=HYBRID
+export HYBRIDTYPE="${ARCLIGHT_TYPE,,}"
+
+exec "$(dirname "$0")/start-spiget" "$@"

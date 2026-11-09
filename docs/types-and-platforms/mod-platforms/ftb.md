@@ -3,7 +3,7 @@
 !!! note
     Requires one of the Ubuntu with Hotspot images listed in [the Java versions section](../../versions/java.md).
 
-[Feed the Beast application](https://www.feed-the-beast.com/) modpacks are supported by setting `MOD_PLATFORM` or `TYPE` to "FTBA"
+[Feed the Beast application](https://www.feed-the-beast.com/) modpacks are supported by setting `MODPACK_PLATFORM`, `MOD_PLATFORM` or `TYPE` to "FTBA"
 
 !!! note
     The "A" at the end of "FTBA" is important. The value "FTB" used to be an alias for "CURSEFORGE".
@@ -30,12 +30,8 @@ If a specific `FTB_MODPACK_VERSION_ID` was not specified, simply restart the con
 The following example runs the latest version of [FTB Presents Direwolf20 1.12](https://ftb.neptunepowered.org/pack/ftb-presents-direwolf20-1-12/):
 
 ``` shell
-docker run -d --name mc-ftb -e EULA=TRUE \
-  -e TYPE=FTBA -e FTB_MODPACK_ID=31 \
-  -p 25565:25565 \
-  itzg/minecraft-server:java8-multiarch
+docker run -d --pull=always -v /path/on/host:/data \
+    -e EULA=TRUE -e TYPE=FTBA \
+    -e FTB_MODPACK_ID=31 -p 25565:25565 \
+    itzg/minecraft-server:java8-multiarch
 ```
-
-!!! note
-
-    Normally you will also add `-v` volume for `/data` since the mods and config are installed there along with world data.

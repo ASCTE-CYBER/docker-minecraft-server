@@ -1,6 +1,6 @@
 # Modrinth Modpacks
 
-[Modrinth Modpacks](https://modrinth.com/modpacks) can automatically be installed along with the required mod loader (Forge or Fabric) by setting `MOD_PLATFORM` or `TYPE` to "MODRINTH". Upgrading (and downgrading) takes care of cleaning up old files and upgrading (and downgrading) the mod loader.
+[Modrinth Modpacks](https://modrinth.com/modpacks) can automatically be installed along with the required mod loader (Forge or Fabric) by setting `MODPACK_PLATFORM`, `MOD_PLATFORM` or `TYPE` to "MODRINTH". Upgrading (and downgrading) takes care of cleaning up old files and upgrading (and downgrading) the mod loader.
 
 ## Modpack project
 
@@ -18,13 +18,13 @@ The desired modpack project is specified with the `MODRINTH_MODPACK` environment
 
 - A custom URL of a hosted [mrpack file](https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack)
 
-- The container path to a local [mrpack file](https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack)
+- The container path to a local [mrpack file](https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack). The file name **must have the `.mrpack` extension** in order to be correctly detected as a local file.
 
 ## Modpack version
 
 The automatic modpack version resolving can be narrowed in a few ways:
 
-The latest release or beta version, respectively, of the Modrinth modpack is selected when `VERSION` is "LATEST" or "SNAPSHOT". That can be overridden by setting `MODRINTH_DEFAULT_VERSION_TYPE` to "release", "beta", or "alpha".
+The latest release or beta version, respectively, of the Modrinth modpack is selected when `VERSION` is "LATEST" or "SNAPSHOT". That can be overridden by setting `MODRINTH_MODPACK_VERSION_TYPE` to "release", "beta", or "alpha".
 
 The resolved modpack version can be narrowed by setting `VERSION` to a specific Minecraft version, such as "1.19.2".
 
@@ -36,7 +36,7 @@ Instead of auto resolving, a specific version of modpack file can be specified b
 
 ## Ignore missing files
 
-Some mods, such as [MCInstance Loader](https://modrinth.com/mod/mcinstance-loader), use temporary files from the modpack and delete them when finished. In order to avoid the installer from detecting the absent file(s) and re-installing, those files can be ignored by passing a comma or newline delimited list to `MODRINTH_IGNORE_MISSING_FILES`.
+Some mods, such as [MCInstance Loader](https://modrinth.com/mod/mcinstance-loader), use temporary files from the modpack and delete them when finished. In order to avoid the installer from detecting the absent file(s) and re-installing, those files can be ignored by passing a comma, newline delimited list or, a file globbing pattern to `MODRINTH_IGNORE_MISSING_FILES`.
 
 !!! example
 
@@ -45,11 +45,12 @@ Some mods, such as [MCInstance Loader](https://modrinth.com/mod/mcinstance-loade
       environment:
         MODRINTH_IGNORE_MISSING_FILES: |
           config/mcinstanceloader/pack.mcinstance
+          mods/*.jar
     ```
 
 ## Excluding files
 
-To exclude client mods that are incorrectly declared by the modpack as server-compatible, set `MODRINTH_EXCLUDE_FILES` to a comma or newline delimited list of partial file names to exclude. You may need to set `MODRINTH_FORCE_SYNCHRONIZE` to "true" while iterating on a compatible set of mods to use.
+To exclude client mods that are incorrectly declared by the modpack as server-compatible, set `MODRINTH_EXCLUDE_FILES` to a comma or newline delimited list of file name matchers. Each entry is a case-insensitive substring of the file path, or a regular expression if surrounded with `/` (same convention as [`CF_FILENAME_MATCHER`](auto-curseforge.md#pinning-modpack-and-mod-loader-versions)). You may need to set `MODRINTH_FORCE_SYNCHRONIZE` to "true" while iterating on a compatible set of mods to use.
 
 !!! example
 
@@ -63,7 +64,7 @@ To exclude client mods that are incorrectly declared by the modpack as server-co
 
 ## Force-include files
 
-To force include client mods, set `MODRINTH_FORCE_INCLUDE_FILES` to a comma or newline delimited list of partial file names. You may need to set `MODRINTH_FORCE_SYNCHRONIZE` to "true" while iterating on a compatible set of mods to use.
+To force include client mods, set `MODRINTH_FORCE_INCLUDE_FILES` to a comma or newline delimited list of file name matchers using the same substring or `/regex/` rules as `MODRINTH_EXCLUDE_FILES`. You may need to set `MODRINTH_FORCE_SYNCHRONIZE` to "true" while iterating on a compatible set of mods to use.
 
 !!! example
 

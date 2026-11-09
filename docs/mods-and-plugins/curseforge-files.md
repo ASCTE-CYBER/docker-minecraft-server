@@ -4,9 +4,11 @@ Mods and plugins can be auto-downloaded and upgraded from CurseForge by setting 
 
 A specific file can be omitted from each reference to allow for auto-selecting the newest version of the selected mod/plugin. The resolved `VERSION` and `TYPE` will be taken into consideration for selecting the appropriate file. 
 
-!!! warning "CurseForge API key usage"
+When `TYPE` is `CLEANROOM`, `CURSEFORGE_FILES` uses the Forge loader context to select compatible files. This only affects CurseForge file resolution; the server still runs with Cleanroom.
 
-    A CurseForge API key must be allocated and set with `CF_API_KEY` [as described here](../types-and-platforms/mod-platforms/auto-curseforge.md#api-key).
+!!! info "CurseForge API key usage"
+
+    A CurseForge API key is _now_ included by this image on Java 17 and newer; however, you can always supply your own instead. A CurseForge API key can be allocated and set with `CF_API_KEY` (or `CF_API_KEY_FILE`) [as described here](../types-and-platforms/mod-platforms/auto-curseforge.md#api-key). The `java8` image (and other pre-Java 17 tags) does not include a baked-in key; set `CF_API_KEY` yourself.
 
 ## Project-file references
 
@@ -22,22 +24,27 @@ The following formats are supported in the list of project-file references:
 - Project ID, such as `238222`. _The newest applicable file will be automatically selected._
 - Project slug or ID, `:`, and a file ID, such as `jei:4593548` or `238222:4593548`
 - Project slug or ID, `@`, and a partial filename, such as `jei@10.2.1.1005`. This option is useful to refer to a version of the mod/plugin rather than looking up the file ID.
+- An `@` followed by the **container path** to a listing file
 
-An `@` followed by the container path to a listing file can also be provided as a project-file reference. Each line is processed as a reference where blank lines and comments that start with `#` are ignored.
+!!! info "More about listing files"
 
-For example, `CURSEFORGE_FILES` can be set to "@/extras/cf-mods.txt" where the container file `/extras/cf-mods.txt` contains
+    Each line in the listing file is processed as one of the references above; however, blank lines and comments that start with `#` are ignored.
+    
+    Make sure to place the listing file in a mounted directory/volume or declare an appropriate mount for it.
+    
+    For example, `CURSEFORGE_FILES` can be set to "@/extras/cf-mods.txt", assuming "/extras" has been added to `volumes` section, where the container file `/extras/cf-mods.txt` contains
+    
+    ```text
+    # This comment is ignored
+    jei:10.2.1.1005
+    
+    # This and previous blank line are ignore
+    geckolib
+    aquaculture
+    naturalist
+    ```
 
-```text
-# This comment is ignored
-jei:10.2.1.1005
-
-# This and previous blank line are ignore
-geckolib
-aquaculture
-naturalist
-```
-
-!!! tip "Docker Compose"
+!!! tip "Multi-line values in Docker Compose"
 
     Making use of the space delimited option, compose file declarations can be organized nicely with a [multi-line string](https://yaml-multiline.info/), such as
     

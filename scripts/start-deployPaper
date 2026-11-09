@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # shellcheck source=start-utils
-. "${SCRIPTS:-/}start-utils"
+. "$(dirname "$0")/start-utils"
 set -o pipefail
 handleDebugMode
 
@@ -10,25 +10,29 @@ handleDebugMode
 : "${PAPER_CHANNEL:=default}"
 : "${PAPER_DOWNLOAD_URL:=}"
 : "${PAPER_CUSTOM_JAR:=}"
-: "${PAPER_CONFIG_DEFAULTS_REPO:=${PAPER_CONFIG_REPO:=https://raw.githubusercontent.com/dayyeeet/minecraft-default-configs/main}}"
+: "${PAPER_CONFIG_DEFAULTS_REPO:=${PAPER_CONFIG_REPO:=https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/main}}"
+: "${CLEAN_SERVER_LIBRARIES:=true}"
 
 resultsFile=/data/.paper.env
 if [[ $PAPER_CUSTOM_JAR ]]; then
   export SERVER="$PAPER_CUSTOM_JAR"
 elif [[ $PAPER_DOWNLOAD_URL ]]; then
-  if ! mc-image-helper install-paper \
-    --output-directory=/data \
-    --results-file="$resultsFile" \
-    --url="$PAPER_DOWNLOAD_URL"; then
-      log "ERROR: failed to download from custom PaperMC URL"
-      exit 1
-  fi
-  # grab SERVER and export it
-  set -a
-  # shellcheck disable=SC1090
-  source "${resultsFile}"
-  set +a
 
+  args=(
+    --output-directory=/data
+    --results-file="$resultsFile"
+    --url="$PAPER_DOWNLOAD_URL"
+  )
+
+  if isTrue $CLEAN_SERVER_LIBRARIES; then
+    args+=(--clean-libraries)
+  fi
+
+  if ! mc-image-helper install-paper "${args[@]}"; then
+    logError "Failed to download from custom PaperMC URL"
+    exit 1
+  fi
+  applyResultsFile ${resultsFile}
 else
   args=(
     --output-directory=/data
@@ -40,25 +44,32 @@ else
   if [[ $PAPER_BUILD ]]; then
     args+=(--build="$PAPER_BUILD")
   fi
+
+  if isTrue $CLEAN_SERVER_LIBRARIES; then
+    args+=(--clean-libraries)
+  fi
+
   if ! mc-image-helper install-paper "${args[@]}"; then
-      log "ERROR: failed to download $PAPER_PROJECT"
+      logError "Failed to download $PAPER_PROJECT"
       exit 1
   fi
-  # grab SERVER and export it
-  set -a
-  # shellcheck disable=SC1090
-  source "${resultsFile}"
-  set +a
-
+  applyResultsFile ${resultsFile}
 fi
 
-# Download default configs to allow for consistent patching
-for c in paper-global.yml paper-world-defaults.yml spigot.yml; do
-  DOWNLOAD_DEFAULT_CONFIGS+=",${PAPER_CONFIG_DEFAULTS_REPO}/${VERSION}/$c"
-done
-export DOWNLOAD_DEFAULT_CONFIGS
+defaultTopLevelConfigs="bukkit.yml spigot.yml"
+if versionLessThan 1.19; then
+  defaultTopLevelConfigs+=" paper.yml"
+else
+  # Download default configs to allow for consistent patching
+  DOWNLOAD_DEFAULT_CONFIGS=$(buildDownloadList "$PAPER_CONFIG_DEFAULTS_REPO" "$VERSION" paper-global.yml paper-world-defaults.yml)
+  export DOWNLOAD_DEFAULT_CONFIGS
+fi
+
+# Download top-level configs to allow for consistent patching
+DOWNLOAD_DEFAULTS=$(buildDownloadList "$PAPER_CONFIG_DEFAULTS_REPO" "$VERSION" $defaultTopLevelConfigs)
+export DOWNLOAD_DEFAULTS
 
 # Normalize on Spigot for downstream operations
 export FAMILY=SPIGOT
 
-exec "${SCRIPTS:-/}start-spiget" "$@"
+exec "$(dirname "$0")/start-spiget" "$@"

@@ -8,13 +8,132 @@ function get_from_gh() {
     fi
     if [[ ! "$oAuthScopes" =~ ^x-oauth-scopes:[[:space:]]*$ ]]; then
       # Don't use what you don't have to...
-      log "ERROR: GH_TOKEN has permissions it doesn't need. Recreate or update this personal access token and disable ALL scopes."
+      logError "GH_TOKEN has permissions it doesn't need. Recreate or update this personal access token and disable ALL scopes."
       exit 1
     else
       curl -fsSL -H "Authorization: token $GH_TOKEN" "${@:2}" "$1"
     fi
   else
     curl -fsSL "${@:2}" "$1"
+  fi
+}
+
+function applyResultsFile() {
+  # grab SERVER and export it
+  set -a
+  # shellcheck disable=SC1090
+  source "$1"
+  set +a
+}
+
+function loadEnvFromFile() {
+  local source=${1?Missing required source argument}
+  local downloaded=
+
+  if isURL "$source"; then
+    mkdir -p /data/.tmp
+    downloaded=$(mktemp -p /data/.tmp)
+    log "Downloading env file from $source"
+    if ! get -o "$downloaded" "$source"; then
+      logError "Failed to download env file from $source"
+      rm -f "$downloaded"
+      return 1
+    fi
+    log "Loading env vars from $source"
+    applyResultsFile "$downloaded"
+    rm -f "$downloaded"
+  elif [ -f "$source" ]; then
+    log "Loading env vars from $source"
+    applyResultsFile "$source"
+  else
+    logError "Env file not found: $source"
+    return 1
+  fi
+}
+
+function loadEnvFromArchive() {
+  local source=${1?Missing required source argument}
+  local entry=${2:-.env}
+  local archive=
+  local downloaded=
+  local tmpdir
+  local rc=0
+
+  mkdir -p /data/.tmp
+
+  if isURL "$source"; then
+    downloaded=$(mktemp -p /data/.tmp)
+    log "Downloading archive from $source"
+    if ! get -o "$downloaded" "$source"; then
+      logError "Failed to download archive from $source"
+      rm -f "$downloaded"
+      return 1
+    fi
+    archive=$downloaded
+  elif [ -f "$source" ]; then
+    archive=$source
+  else
+    logError "Archive not found: $source"
+    return 1
+  fi
+
+  tmpdir=$(mktemp -d -p /data/.tmp)
+  if extract "$archive" "$tmpdir" "$entry" && [ -f "$tmpdir/$entry" ]; then
+    log "Loading env vars from '$entry' in $source"
+    applyResultsFile "$tmpdir/$entry"
+  else
+    logError "Failed to load env entry '$entry' from $source"
+    rc=1
+  fi
+
+  rm -rf "$tmpdir"
+  [[ -n "$downloaded" ]] && rm -f "$downloaded"
+  return $rc
+}
+
+function loadEnvFromGenericPack() {
+  : "${GENERIC_PACKS:=${GENERIC_PACK:-}}"
+  : "${GENERIC_PACKS_PREFIX:=}"
+  : "${GENERIC_PACKS_SUFFIX:=}"
+
+  if [[ -z "${GENERIC_PACKS}" ]]; then
+    logWarning "LOAD_ENV_FROM_GENERIC_PACK is set but GENERIC_PACK(S) is empty"
+    return 0
+  fi
+
+  mkdir -p /data/.tmp
+  IFS=',' read -ra packs <<< "${GENERIC_PACKS}"
+  local loaded=0
+  local pack packEntry packFile tmpdir
+  for packEntry in "${packs[@]}"; do
+    pack="${GENERIC_PACKS_PREFIX}${packEntry}${GENERIC_PACKS_SUFFIX}"
+    if isURL "$pack"; then
+      mkdir -p /data/packs
+      if ! packFile=$(get -o /data/packs --output-filename --skip-up-to-date "$pack"); then
+        logError "Failed to download generic pack $pack"
+        return 1
+      fi
+    else
+      packFile=$pack
+    fi
+
+    if [[ ! -f "$packFile" ]]; then
+      logError "Generic pack not found: $packFile"
+      return 1
+    fi
+
+    tmpdir=$(mktemp -d -p /data/.tmp)
+    # Packs without a .env are valid — silently skip; the unpack step still applies them.
+    if extract "$packFile" "$tmpdir" .env 2>/dev/null && [ -f "$tmpdir/.env" ]; then
+      log "Loading env vars from .env in $pack"
+      applyResultsFile "$tmpdir/.env"
+      loaded=$((loaded + 1))
+    fi
+    rm -rf "$tmpdir"
+  done
+
+  if (( loaded == 0 )); then
+    logWarning "LOAD_ENV_FROM_GENERIC_PACK is set but no pack in GENERIC_PACK(S) contained a .env"
   fi
 }
 
@@ -31,27 +150,46 @@ function get_major_version() {
   echo "$version" | cut -d. -f 1-2
 }
 
+function isPercentage() {
+  local value=$1
+  
+  [[ $value =~ ^[0-9]+(\.[0-9]+)?\s*%$ ]]
+}
+
+function getPercentageValue() {
+  local value=$1
+  if [[ "$value" =~ ^([0-9]+(\.[0-9]+)?)\s*%$ ]]; then
+    echo "${BASH_REMATCH[1]}"
+    return 0
+  else
+    logError "Value '$value' is not a valid percentage."
+    return 1
+  fi
+}
+
 function isURL() {
   local value=$1
 
-  if [[ ${value:0:8} == "https://" || ${value:0:7} == "http://" || ${value:0:6} == "ftp://" ]]; then
-    return 0
-  else
-    return 1
-  fi
+  [[ $value =~ ^(https?|ftp):// ]]
+}
+
+function isOCIRef() {
+  local value=$1
+
+  [[ $value =~ ^oci:// ]]
 }
 
 function isValidFileURL() {
   suffix=${1:?Missing required suffix arg}
   url=${2:?Missing required url arg}
 
-  [[ "$url" == http*://*.${suffix} || "$url" == http*://*.${suffix}\?* ]]
+  [[ "$url" =~ ^http.*://.*\.${suffix}(\?.*)?$ ]]
 }
 
 function resolveEffectiveUrl() {
   url="${1:?Missing required url argument}"
   if ! curl -Ls -o /dev/null -w "%{url_effective}" "$url"; then
-    log "ERROR failed to resolve effective URL from $url"
+    logError "Failed to resolve effective URL from $url"
     exit 2
   fi
 }
@@ -85,11 +223,7 @@ function isFalse() {
 }
 
 function isDebugging() {
-  if isTrue "${DEBUG:-false}"; then
-    return 0
-  else
-    return 1
-  fi
+  isTrue "${DEBUG:-false}"
 }
 
 function handleDebugMode() {
@@ -108,19 +242,109 @@ function logn() {
   echo -n "[init] $*"
 }
 
+# Use as
+# cmd | applyLogPrefix
+function applyLogPrefix() {
+  sed 's/^/[init] /'
+}
+
 function log() {
   local oldState
   # The  return  status  when listing options is zero if all optnames are enabled, non- zero otherwise.
   oldState=$(shopt -po xtrace || true)
   shopt -u -o xtrace
-
+  ts=
   if isDebugging || isTrue "${LOG_TIMESTAMP:-false}"; then
     ts=" $(date --rfc-3339=seconds)"
-  else
-    ts=
   fi
-  echo "[init]${ts} $*"
+  echo -e "[init]${ts} $*"
   eval "$oldState"
+}
+
+# Refer to https://unix.stackexchange.com/a/10065/102376
+function isTerminal() {
+  if test -t 1; then
+    # see if it supports colors...
+    ncolors=$(tput colors)
+    test -n "$ncolors" && test "$ncolors" -ge 8
+  else
+    return 1
+  fi
+}
+
+errorLogTag="[ERROR]"
+warningLogTag="[WARN]"
+
+if isTerminal; then
+  normal="$(tput sgr0)"
+  red="$(tput setaf 1)"
+  yellow="$(tput setaf 3)"
+  function getErrorColoredLogString() {
+    echo "${red}$errorLogTag $* ${normal}"
+  }
+  function getWarningColoredLogString() {
+    echo "${yellow}$warningLogTag $* ${normal}"
+  }
+else
+  function getErrorColoredLogString() {
+    echo "$errorLogTag $*"
+  }
+  function getWarningColoredLogString() {
+    echo "$warningLogTag $*"
+  }
+fi
+
+function error() {
+  echo -e "$(getErrorColoredLogString "$*")"
+}
+
+function logError() {
+  if isDebugging; then
+    set +x
+  fi
+  log "$(getErrorColoredLogString "$*")"
+  if isDebugging; then
+    set -x
+  fi
+}
+
+function warning() {
+  if isDebugging; then
+    set +x
+  fi
+  echo -e "$(getWarningColoredLogString "$*")"
+  if isDebugging; then
+    set -x
+  fi
+}
+
+function logWarning() {
+  log "$(getWarningColoredLogString "$*")"
+}
+
+function isNumeric() {
+  [[ $1 =~ ^[0-9]+$ ]]
+}
+
+function isNumericElseSetToDefault() {
+  local var_name="$1"
+  local default_value="$2"
+  
+  if ! isNumeric ${!var_name} ; then
+    eval "$var_name=$default_value"
+    export "$var_name"
+    logWarning "$var_name is not numeric, set to $default_value (seconds)"
+  fi
+}
+
+function checkIfNotZeroElseSetToDefault() {
+  local var_name="$1"
+  local default_value="$2"
+  if [ "${!var_name}" -eq "0" ] ; then
+    eval "$var_name=$default_value"
+    export "$var_name"
+    logWarning "$var_name must not be 0, set to $default_value (seconds)"
+  fi
 }
 
 function logAutopause() {
@@ -144,8 +368,22 @@ function logRcon() {
 }
 
 function normalizeMemSize() {
+  # Convert a JVM-style size (k/m/g) or a percentage of the container memory
+  # limit into bytes. Bash arithmetic is integer-only, so percentages cannot
+  # use a 0.01 scale factor.
+  local input=${1?}
+  local val=${input:0:-1}
   local scale=1
-  case ${1,,} in
+  local mem
+
+  val=${val// /}
+  val=${val%%.*}
+  if ! [[ $val =~ ^[0-9]+$ ]]; then
+    logError "Unable to parse memory size '$input'"
+    return 1
+  fi
+
+  case ${input,,} in
   *k)
     scale=1024
     ;;
@@ -155,113 +393,119 @@ function normalizeMemSize() {
   *g)
     scale=1073741824
     ;;
+  *%)
+    if [ -f /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+      mem=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
+    elif [ -f /sys/fs/cgroup/memory.max ]; then
+      mem=$(cat /sys/fs/cgroup/memory.max)
+    fi
+    # cgroup v2 unlimited is "max"; cgroup v1 uses a large sentinel (~2^63).
+    if [[ $mem == max || ! $mem =~ ^[0-9]+$ ]] || (( mem > 1 << 62 )); then
+      mem=$(awk '/MemTotal:/ { print $2 * 1024 }' /proc/meminfo)
+    fi
+    if ! [[ $mem =~ ^[0-9]+$ ]]; then
+      logError "Unable to determine memory limit for percentage value '$input'"
+      return 1
+    fi
+    echo $((val * mem / 100))
+    return 0
+    ;;
   esac
 
-  val=${1:0:-1}
   echo $((val * scale))
 }
 
 function compare_version() {
-    local left_version=$1
-    local comparison=$2
-    local right_version=$3
+  local left_version=$1
+  local comparison=$2
+  local right_version=$3
 
-    if [[ -z "$left_version" ]]; then
-        echo "Left version is required"
-        return 1
-    fi
+  if [[ -z "$left_version" ]]; then
+    echo "Left version is required"
+    return 1
+  fi
 
-    if [[ -z "$right_version" ]]; then
-        echo "Right version is required"
-        return 1
-    fi
+  if [[ -z "$right_version" ]]; then
+    echo "Right version is required"
+    return 1
+  fi
 
-    # Handle version channels ('a', 'b', or numeric)
-    if [[ $left_version == a* || $left_version == b* ]]; then
-        left_version=${left_version:1}
-    fi
-    
-    if [[ $right_version == a* || $right_version == b* ]]; then
-        right_version=${right_version:1}
-    fi
+  # Handle version channels ('a', 'b', or numeric)
+  if [[ $left_version == a* ]]; then
+    left_version=${left_version:1}
+    left_version_channel=1
+  elif [[ $left_version == b* ]]; then
+    left_version=${left_version:1}
+    left_version_channel=2
+  else 
+    left_version_channel=3    
+  fi
+  if [[ $right_version == a* ]]; then
+    right_version=${right_version:1}
+    right_version_channel=1
+  elif [[ $right_version == b* ]]; then
+    right_version=${right_version:1}
+    right_version_channel=2
+  else 
+    right_version_channel=3    
+  fi
 
+  if [[ $comparison == "lt" && $left_version_channel < $right_version_channel ]]; then
+      return 0
+  elif [[ $comparison == "lt" && $left_version_channel > $right_version_channel ]]; then
+      return 1
+  elif [[ $comparison == "gt" && $left_version_channel > $right_version_channel ]]; then
+      return 0
+  elif [[ $comparison == "gt" && $left_version_channel < $right_version_channel ]]; then
+      return 1
+  elif [[ $comparison == "le" && $left_version_channel < $right_version_channel ]]; then
+      return 0
+  elif [[ $comparison == "le" && $left_version_channel == $right_version_channel ]]; then
+      return 0
+  elif [[ $comparison == "ge" && $left_version_channel > $right_version_channel ]]; then
+      return 0
+  elif [[ $comparison == "ge" && $left_version_channel == $right_version_channel ]]; then
+      return 0
+  elif [[ $comparison == "eq" && $left_version_channel == $right_version_channel ]]; then
+      return 0
+  fi
 
-    local left_version_channel=${left_version:0:1}
-    if [[ $left_version_channel =~ [0-9] ]]; then
-        left_version_channel='r'
-    fi
+# Compare the versions using sort -V
+  local result=1
 
-    local right_version_channel=${right_version:0:1}
-    if [[ $right_version_channel =~ [0-9] ]]; then
-        right_version_channel='r'
-    fi
+  case $comparison in
+      "lt")
+          if [[ $(echo -e "$left_version\n$right_version" | sort -V | head -n1) == "$left_version" && "$left_version" != "$right_version" ]]; then
+              result=0
+          fi
+          ;;
+      "le")
+          if [[ $(echo -e "$left_version\n$right_version" | sort -V | head -n1) == "$left_version" ]]; then
+              result=0
+          fi
+          ;;
+      "eq")
+          if [[ "$left_version" == "$right_version" ]]; then
+              result=0
+          fi
+          ;;
+      "ge")
+          if [[ $(echo -e "$left_version\n$right_version" | sort -V | tail -n1) == "$left_version" ]]; then
+              result=0
+          fi
+          ;;
+      "gt")
+          if [[ $(echo -e "$left_version\n$right_version" | sort -V | tail -n1) == "$left_version" && "$left_version" != "$right_version" ]]; then
+              result=0
+          fi
+          ;;
+      *)
+          echo "Unsupported comparison operator: $comparison"
+          return 1
+          ;;
+  esac
 
-    if [[ $comparison == "lt" && $left_version_channel < $right_version_channel ]]; then
-        return 0
-    elif [[ $comparison == "lt" && $left_version_channel > $right_version_channel ]]; then
-        return 1
-    elif [[ $comparison == "gt" && $left_version_channel > $right_version_channel ]]; then
-        return 0
-    elif [[ $comparison == "gt" && $left_version_channel < $right_version_channel ]]; then
-        return 1
-    elif [[ $comparison == "le" && $left_version_channel < $right_version_channel ]]; then
-        return 0
-    elif [[ $comparison == "le" && $left_version_channel == $right_version_channel ]]; then
-        return 0
-    elif [[ $comparison == "ge" && $left_version_channel > $right_version_channel ]]; then
-        return 0
-    elif [[ $comparison == "ge" && $left_version_channel == $right_version_channel ]]; then
-        return 0
-    elif [[ $comparison == "eq" && $left_version_channel == $right_version_channel ]]; then
-        return 0
-    fi
-
-    # Compare the versions using sort -V
-    local result
-
-    case $comparison in
-        "lt")
-            if [[ $(echo -e "$left_version\n$right_version" | sort -V | head -n1) == "$left_version" && "$left_version" != "$right_version" ]]; then
-                result=0
-            else
-                result=1
-            fi
-            ;;
-        "le")
-            if [[ $(echo -e "$left_version\n$right_version" | sort -V | head -n1) == "$left_version" ]]; then
-                result=0
-            else
-                result=1
-            fi
-            ;;
-        "eq")
-            if [[ "$left_version" == "$right_version" ]]; then
-                result=0
-            else
-                result=1
-            fi
-            ;;
-        "ge")
-            if [[ $(echo -e "$left_version\n$right_version" | sort -V | tail -n1) == "$left_version" ]]; then
-                result=0
-            else
-                result=1
-            fi
-            ;;
-        "gt")
-            if [[ $(echo -e "$left_version\n$right_version" | sort -V | tail -n1) == "$left_version" && "$left_version" != "$right_version" ]]; then
-                result=0
-            else
-                result=1
-            fi
-            ;;
-        *)
-            echo "Unsupported comparison operator: $comparison"
-            return 1
-            ;;
-    esac
-
-    return $result
+  return $result
 }
 
 function versionLessThan() {
@@ -270,39 +514,10 @@ function versionLessThan() {
   oldState=$(shopt -po xtrace || true)
   shopt -u -o xtrace
 
-  # Use if-else since strict mode might be enabled
-  if compare_version "${VERSION}" "lt" "${1?}"; then
-    eval "$oldState"
-    return 0
-  else
-    eval "$oldState"
-    return 1
-  fi
-}
+  eval "$oldState"
 
-requireVar() {
-  if [ ! -v "$1" ]; then
-    log "ERROR: $1 is required to be set"
-    exit 1
-  fi
-  if [ -z "${!1}" ]; then
-    log "ERROR: $1 is required to be set"
-    exit 1
-  fi
-}
-
-requireEnum() {
-  var=${1?}
-  shift
-
-  for allowed in "$@"; do
-    if [[ ${!var} = "$allowed" ]]; then
-      return 0
-    fi
-  done
-
-  log "ERROR: $var must be set to one of $*"
-#  exit 1
+  # Verify strict mode because it might be enabled
+  compare_version "${VERSION}" "lt" "${1?}"
 }
 
 function writeEula() {
@@ -310,7 +525,7 @@ function writeEula() {
 # $(date)
 eula=${EULA,,}
 " >/data/eula.txt; then
-    log "ERROR: unable to write eula to /data. Please make sure attached directory is writable by uid=${UID}"
+    logError "Unable to write eula to /data. Please make sure attached directory is writable by uid=${UID}"
     exit 2
   fi
 }
@@ -324,6 +539,23 @@ function removeOldMods {
       --min-depth=1 --max-depth "${REMOVE_OLD_MODS_DEPTH}"
       --name "${REMOVE_OLD_MODS_INCLUDE}"
       --exclude-name "${REMOVE_OLD_MODS_EXCLUDE}"
+    )
+    if ! isDebugging; then
+      args+=(--quiet)
+    fi
+    mc-image-helper find "${args[@]}" "$1"
+  fi
+}
+
+function removeOldConfigs {
+  if [ -d "$1" ]; then
+    log "Removing old configs including='${REMOVE_OLD_CONFIGS_INCLUDE}' excluding='${REMOVE_OLD_CONFIGS_EXCLUDE}' up to depth=${REMOVE_OLD_CONFIGS_DEPTH}"
+    args=(
+      --delete
+      --type file
+      --min-depth=1 --max-depth "${REMOVE_OLD_CONFIGS_DEPTH}"
+      --name "${REMOVE_OLD_CONFIGS_INCLUDE}"
+      --exclude-name "${REMOVE_OLD_CONFIGS_EXCLUDE}"
     )
     if ! isDebugging; then
       args+=(--quiet)
@@ -356,7 +588,7 @@ function isFamily() {
 function isType() {
   for t in "${@}"; do
     # shellcheck disable=SC2153
-    if [[ $TYPE == "$t" ]]; then
+    if [[ ${TYPE^^} == "${t^^}" ]]; then
       return 0
     fi
   done
@@ -364,29 +596,81 @@ function isType() {
 }
 
 function extract() {
-  src=${1?}
-  destDir=${2?}
+  local src=${1?}
+  local destDir=${2?}
+  shift 2
+  # Remaining args are paths within the archive; if none, extract everything.
 
+  # Use modern `mc-image-helper extract archive` if it exists. Standardises extraction logic
+  # and checks if ZipSlips / Path Traversals exist before extraction
+  # Supports ZIP, TAR, TAR.GZ, TAR.BZ2, TAR.ZSTD 
+  if mc-image-helper has-feature archive; then
+    mc-image-helper archive extract --overwrite -- "${src}" "${destDir}" "$@"
+    return $?
+  fi
+
+  # Older helper builds, including Java 8, use the shell extraction fallback.
+  local type
   type=$(file -b --mime-type "${src}")
+  if [[ "$type" == application/octet-stream ]]; then
+      logWarning "Detected non-specific file type $type for $src"
+      case "$src" in
+        *.zip)
+          log "Assuming zip from extension"
+          type=application/zip
+          ;;
+        # otherwise fall through to
+      esac
+  fi
+
   case "${type}" in
-    application/zip)
-      unzip -o -q -d "${destDir}" "${src}"
-      ;;
-    application/x-tar|application/gzip|application/x-gzip|application/x-bzip2)
-      tar -C "${destDir}" -xf "${src}"
-      ;;
-    application/zstd|application/x-zstd)
-      tar -C "${destDir}" --use-compress-program=unzstd -xf "${src}"
-      ;;
-    *)
-      log "ERROR: unsupported archive type: $type"
+  application/zip)
+    if unzip -Z1 "${src}" | grep -qE '(^/)|(^\.\./)|(/\.\./)|(/\.\.$)'; then
+      logError "Refusing to extract $src because it contains path traversal entries"
       return 1
-      ;;
+    fi
+    unzip -o -q -d "${destDir}" "${src}" "$@"
+    ;;
+  application/x-tar | application/gzip | application/x-gzip | application/x-bzip2)
+    if tar -tf "${src}" | grep -qE '(^/)|(^\.\./)|(/\.\./)|(/\.\.$)'; then
+      logError "Refusing to extract $src because it contains path traversal entries"
+      return 1
+    fi
+    tar -C "${destDir}" -xf "${src}" "$@"
+    ;;
+  application/zstd | application/x-zstd)
+    if tar --use-compress-program=unzstd -tf "${src}" | grep -qE '(^/)|(^\.\./)|(/\.\./)|(/\.\.$)'; then
+      logError "Refusing to extract $src because it contains path traversal entries"
+      return 1
+    fi
+    tar -C "${destDir}" --use-compress-program=unzstd -xf "${src}" "$@"
+    ;;
+  *)
+    logError "Unsupported archive type: $type"
+    return 1
+    ;;
   esac
 }
 
 function getDistro() {
   grep -E "^ID=" /etc/os-release | cut -d= -f2 | sed -e 's/"//g'
+}
+
+function getJavaRelease() {
+  # Read the major version from the JDK's release file so no JVM has to start;
+  # the helper is the fallback when the file is missing.
+  local version
+  if [[ ${JAVA_HOME:-} && -f "$JAVA_HOME/release" ]]; then
+    version=$(sed -n -e 's/^JAVA_VERSION="\(.*\)"$/\1/p' "$JAVA_HOME/release")
+    # Java 8 and earlier report 1.8.0_312 and so on
+    version=${version#1.}
+    version=${version%%[._-]*}
+  fi
+  if isNumeric "${version:-}"; then
+    echo "$version"
+  else
+    mc-image-helper java-release
+  fi
 }
 
 function checkSum() {
@@ -395,33 +679,47 @@ function checkSum() {
   # Get distro
   distro=$(getDistro)
 
-  if [ "${distro}" == "debian" ] && sha1sum -c "${sum_file}" --status 2> /dev/null; then
-    return 0
-  elif [ "${distro}" == "ubuntu" ] && sha1sum -c "${sum_file}" --status 2> /dev/null; then
-    return 0
-  elif [ "${distro}" == "alpine" ] && sha1sum -c "${sum_file}" -s 2> /dev/null; then
-    return 0
-  elif [ "${distro}" == "ol" ] && sha1sum -c "${sum_file}" --status 2> /dev/null; then
-    return 0
-  else
+  case "${distro}" in
+  debian | ubuntu | ol)
+    sha1sum -c "${sum_file}" --status 2>/dev/null && return 0
+    ;;
+  alpine)
+    sha1sum -c "${sum_file}" -s 2>/dev/null && return 0
+    ;;
+  *)
     return 1
-  fi
+    ;;
+  esac
 }
 
 function usesMods() {
-  case "$FAMILY" in
-    FORGE|FABRIC|HYBRID|SPONGE)
+  if isTrue "${USES_MODS:-}"; then
+    return 0
+
+  else
+    case "$FAMILY" in
+    FORGE | FABRIC | HYBRID | SPONGE)
       return 0
-  esac
-  return 1
+      ;;
+    esac
+    return 1
+
+  fi
 }
 
 function usesPlugins() {
-  case "$FAMILY" in
-    SPIGOT|HYBRID)
+  if isTrue "${USES_PLUGINS:-}"; then
+    return 0
+
+  else
+    case "$FAMILY" in
+    SPIGOT | HYBRID)
       return 0
-  esac
-  return 1
+      ;;
+    esac
+    return 1
+
+  fi
 }
 
 function resolveVersion() {
@@ -435,15 +733,15 @@ function resolveVersion() {
 
 function resolveFamily() {
   case "$TYPE" in
-    PAPER|SPIGOT|BUKKIT|CANYON|PUFFERFISH|PURPUR)
-      FAMILY=SPIGOT
-      ;;
-    FORGE)
-      FAMILY=FORGE
-      ;;
-    FABRIC|QUILT)
-      FAMILY=FABRIC
-      ;;
+  PAPER | SPIGOT | BUKKIT | CANYON | PUFFERFISH | PURPUR)
+    FAMILY=SPIGOT
+    ;;
+  FORGE)
+    FAMILY=FORGE
+    ;;
+  FABRIC | QUILT)
+    FAMILY=FABRIC
+    ;;
   esac
   export FAMILY
 }
@@ -452,7 +750,35 @@ function ensureRemoveAllModsOff() {
   reason=${1?}
 
   if isTrue "${REMOVE_OLD_MODS:-false}"; then
-    log "WARNING using REMOVE_OLD_MODS interferes with $reason -- it is now disabled"
+    logWarning "Using REMOVE_OLD_MODS interferes with $reason -- it is now disabled"
     REMOVE_OLD_MODS=false
+  fi
+}
+
+function buildDownloadList() {
+  repoUrl=${1?}
+  version=${2?}
+  shift 2
+  result=
+  for c in "${@}"; do
+    if [[ $result ]]; then
+      result+=","
+    fi
+    result+="${repoUrl}/${version}/$c"
+  done
+  echo "$result"
+}
+
+function firstArrayElement {
+  local -n a="$1"
+  if (( ${#a[@]} )); then
+    echo "${a[0]}"
+  fi
+}
+
+function shiftArray {
+  local -n a="$1"
+  if (( ${#a[@]} )); then
+    a=("${a[@]:1}")
   fi
 }

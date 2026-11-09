@@ -8,10 +8,16 @@ By default, the image declares an initial and maximum Java memory-heap limit of 
 - `INIT_MEMORY`: independently sets the initial heap size
 - `MAX_MEMORY`: independently sets the max heap size
 
-The values of all three are passed directly to the JVM and support format/units as `<size>[g|G|m|M|k|K]`. 
+The values of all three are passed directly to the JVM and support format/units as `<size>[g|G|m|M|k|K]`.
+
+To have control over heap size, without relying on absolute memory sizes percentages are also supported using `<size>%`.
+
+!!! info "RAMPercentage parameters"
+    Percentage based heap sizing is enabled using `-XX:InitialRAMPercentage` for `INIT_MEMORY` and `-XX:MaxRAMPercentage` for `MAX_MEMORY`.
+    For details on the function of these parameters look [here](https://www.baeldung.com/java-jvm-parameters-rampercentage).
 
 !!! example "Using docker run"
- 
+
     ```
         -e MEMORY=2G
     ```
@@ -23,7 +29,7 @@ The values of all three are passed directly to the JVM and support format/units 
     ```
 
 !!! example "Using compose file"
-     
+
     ```
         environment:
           MEMORY: 2G
@@ -37,18 +43,7 @@ The values of all three are passed directly to the JVM and support format/units 
           MAX_MEMORY: 4G
     ```
 
-To let the JVM calculate the heap size from the container declared memory limit, unset `MEMORY` with an empty value, such as `-e MEMORY=""`. By default, the JVM will use 25% of the container memory limit as the heap limit; however, as an example the following would tell the JVM to use 75% of the container limit of 4GB of memory:
-
-!!! example "MaxRAMPercentage using compose file"
-
-    ```
-        environment:
-          MEMORY: ""
-          JVM_XX_OPTS: "-XX:MaxRAMPercentage=75"
-        deploy:
-          limits:
-            memory: 4G  
-    ```
+To let the JVM calculate the heap size from the container declared memory limit, unset `MEMORY` with an empty value, such as `-e MEMORY=""`. By default, the JVM will use 25% of the container memory limit as the heap limit.
 
 !!! important
     The settings above only set the Java **heap** limits. Memory resource requests and limits on the overall container should also account for non-heap memory usage. An extra 25% is [a general best practice](https://dzone.com/articles/best-practices-java-memory-arguments-for-container).
@@ -56,10 +51,10 @@ To let the JVM calculate the heap size from the container declared memory limit,
 ## Extra JVM Options
 
 General JVM options can be passed to the Minecraft Server invocation by passing a `JVM_OPTS`
-environment variable. The JVM requires `-XX` options to precede `-X` options, so those can be declared in `JVM_XX_OPTS`. Both variables are space-delimited, raw JVM arguments.
+environment variable. If needing to set `-XX` options, then pass those with the `JVM_XX_OPTS` variable instead. Both variables accept space-delimited, raw JVM arguments.
 
 ```
-docker run ... -e JVM_OPTS="-someJVMOption someJVMOptionValue" ...
+docker run ... -e JVM_OPTS="-XsomeJVMOption -DpropName=value" ...
 ```
 
 **NOTE** When declaring `JVM_OPTS` in a compose file's `environment` section with list syntax, **do not** include the quotes:
@@ -67,7 +62,7 @@ docker run ... -e JVM_OPTS="-someJVMOption someJVMOptionValue" ...
 ```yaml
     environment:
       - EULA=true
-      - JVM_OPTS=-someJVMOption someJVMOptionValue 
+      - JVM_OPTS=-XsomeJVMOption -DpropName=value
 ```
 
 Using object syntax is recommended and more intuitive:
@@ -75,9 +70,9 @@ Using object syntax is recommended and more intuitive:
 ```yaml
     environment:
       EULA: "true"
-      JVM_OPTS: "-someJVMOption someJVMOptionValue"
-# or
-#     JVM_OPTS: -someJVMOption someJVMOptionValue
+      JVM_OPTS: "-XsomeJVMOption -DpropName=value"
+# or without quotes
+#     JVM_OPTS: -XsomeJVMOption -DpropName=value
 ```
 
 As a shorthand for passing several system properties as `-D` arguments, you can instead pass a comma separated list of `name=value` or `name:value` pairs with `JVM_DD_OPTS`. (The colon syntax is provided for management platforms like Plesk that don't allow `=` inside a value.)
@@ -93,6 +88,33 @@ you can use
 ```yaml
   JVM_DD_OPTS: fml.queryResult=confirm,name=value
 ```
+
+## Java and JVM Agents
+
+Java agents, such as [authlib-injector](https://github.com/yushijinhun/authlib-injector), can be loaded into the server by setting `JAVA_AGENTS`, and native JVM agents by setting `JVM_AGENTS`. Like [the `MODS` / `PLUGINS` variables](../mods-and-plugins/index.md#modsplugins-list), both are a comma or newline delimited list of
+
+- URL of an agent file
+- container path to an agent file
+- container path to a directory containing agent jar files for `JAVA_AGENTS`, or `.so` files for `JVM_AGENTS`
+
+The agents are copied into `/data/agents/java` and `/data/agents/jvm`, and each one is passed to the JVM as `-javaagent:<file>` or `-agentpath:<file>`, in file name order.
+
+!!! example
+
+    ```yaml
+        environment:
+          JAVA_AGENTS: |
+            https://www.example.com/agents/agent.jar
+            /agents
+    ```
+
+!!! note "Auto-removal"
+
+    Entries that are removed from the `JAVA_AGENTS` or `JVM_AGENTS` list will be automatically removed from the agents directory, so they are no longer loaded.
+
+!!! note "Agent options"
+
+    An agent that needs options, such as `-javaagent:agent.jar=options`, can still be passed with `JVM_OPTS` instead.
 
 ## Enable Remote JMX for Profiling
 
@@ -111,7 +133,7 @@ If needing to map to a different port, then also set the environment variable `J
 !!! example
 
     With a compose file:
-    
+
     ```yaml
     environment:
       ENABLE_JMX: true
@@ -130,3 +152,11 @@ The set of flags documented there can be added using
     -e USE_AIKAR_FLAGS=true
 
 When `MEMORY` is greater than or equal to 12G, then the Aikar flags will be adjusted according to the article.
+
+## Enable MeowIce's Flags
+
+[MeowIce has created an updated set of JVM flags](https://github.com/MeowIce/meowice-flags?tab=readme-ov-file#why-would-i-have-to-switch-) based on Aikar's flags but with support for optimizations for Java 17 and above
+
+The set of flags documented there can be added by setting the environment variable `USE_MEOWICE_FLAGS` to `true`. There is an optional `USE_MEOWICE_GRAALVM_FLAGS` variable to enable GraalVM specific optimizations, defaults to `FALSE`.
+
+MeowIce's flags use the G1 garbage collector by default. MeowIce also provides a [ZGC version of the flags](https://github.com/MeowIce/meowice-flags#zgc-version-for-large-servers-with-32gb-allocated-heap), which is recommended for servers with 32GB or more of allocated memory and many CPU cores. To use it instead, also set `USE_MEOWICE_ZGC_FLAGS` to `true`. When `MAX_MEMORY` (or `MEMORY`) is larger than 2GB, the soft max heap size is set to 2GB below it, as in MeowIce's flags.

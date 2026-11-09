@@ -1,16 +1,20 @@
 name: Verify PR
 on:
   pull_request:
-    branches: [ master ]
-    types: [assigned, opened, synchronize, labeled]
+    branches:
+      - master
     paths-ignore:
       - "*.md"
       - "docs/**"
       - "examples/**"
       - "notes/**"
       - "kustomize/**"
-      - "docker-compose*.yml"
-      - "mkdocs.yml"
+      - "docker-compose.yml"
+      - "images.json"
+      - "compose-docs.yml"
+      - "zensical.toml"
+      - ".readthedocs.yaml"
+      - "renovate.json5"
 
 jobs:
   build:
@@ -18,18 +22,27 @@ jobs:
       fail-fast: false
       matrix:
         variant:
-          - java21
-          - java21-alpine
+          - java25
+          - java25-alpine
+          - java25-graalvm
           - java17
           - java8
         include:
-        # JAVA 21:
-          - variant: java21
-            baseImage: eclipse-temurin:21-jre
+        # JAVA 21/25:
+          - variant: java25
+            # stay aligned with build.yml
+            baseImage: eclipse-temurin:25-jre-noble
             platforms: linux/amd64,linux/arm64
             mcVersion: latest
-          - variant: java21-alpine
-            baseImage: eclipse-temurin:21-jre-alpine
+          - variant: java25-alpine
+            baseImage: eclipse-temurin:25-jre-alpine
+            platforms: linux/amd64,linux/arm64
+            mcVersion: latest
+            # For GLIBC_2.34 support (and Alpine)
+            knockdRepoOrg: Metalcape/knock
+          - variant: java25-graalvm
+            # stay aligned with build.yml
+            baseImage: container-registry.oracle.com/graalvm/jdk:25-ol10
             platforms: linux/amd64,linux/arm64
             mcVersion: latest
         # JAVA 17:
@@ -38,35 +51,48 @@ jobs:
             baseImage: eclipse-temurin:17-jre-focal
             platforms: linux/amd64
             mcVersion: 1.20.4
+            # For GLIBC_2.34 support
+            knockdRepoOrg: Metalcape/knock
+        # JAVA 8:
           - variant: java8
-            baseImage: eclipse-temurin:8u312-b07-jre-focal
+            # make sure to track the base image version in build.yml
+            baseImage: eclipse-temurin:8-jre
             platforms: linux/amd64
             mcVersion: 1.12.2
+            # For GLIBC_2.34 support
+            knockdRepoOrg: Metalcape/knock
+            # Pin version for Java 8, be sure to also set in build.yml
+            mcHelperVersion: 1.51.6-java8
     env:
       IMAGE_TO_TEST: ${{ github.repository_owner }}/minecraft-server:test-${{ matrix.variant }}-${{ github.run_id }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v7
         with:
           # for build-files step
           fetch-depth: 0
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3.6.1
+        uses: docker/setup-buildx-action@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4.4.0
 
       - name: Confirm multi-arch build
-        uses: docker/build-push-action@v6.7.0
+        uses: docker/build-push-action@v7
         with:
           platforms: ${{ matrix.platforms }}
           # ensure latest base image is used
           pull: true
           build-args: |
             BASE_IMAGE=${{ matrix.baseImage }}
+            ${{ matrix.mcHelperVersion && format('MC_HELPER_VERSION={0}', matrix.mcHelperVersion) }}
+            ${{ matrix.knockdRepoOrg && format('KNOCKD_REPO_ORG={0}', matrix.knockdRepoOrg) }}
           cache-from: type=gha,scope=${{ matrix.variant }}
 
       - name: Build for test
-        uses: docker/build-push-action@v6.7.0
+        uses: docker/build-push-action@v7
         with:
           # Only build single platform since loading multi-arch image into daemon fails with
           # "docker exporter does not currently support exporting manifest lists"
@@ -79,6 +105,8 @@ jobs:
           push: false
           build-args: |
             BASE_IMAGE=${{ matrix.baseImage }}
+            ${{ matrix.mcHelperVersion && format('MC_HELPER_VERSION={0}', matrix.mcHelperVersion) }}
+            ${{ matrix.knockdRepoOrg && format('KNOCKD_REPO_ORG={0}', matrix.knockdRepoOrg) }}
           cache-from: type=gha,scope=${{ matrix.variant }}
 
       - name: Run tests
@@ -87,5 +115,6 @@ jobs:
           VARIANT: ${{ matrix.variant }}
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           DEBUG: ${{ runner.debug }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           tests/test.sh

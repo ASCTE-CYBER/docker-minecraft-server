@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # shellcheck source=start-utils
-. "${SCRIPTS:-/}start-utils"
+. "$(dirname "$0")/start-utils"
 
 set -e
 handleDebugMode
@@ -14,7 +14,10 @@ handleDebugMode
 : "${REPLACE_ENV_VARIABLES_EXCLUDE_PATHS:=}"
 : "${PATCH_DEFINITIONS:=}"
 : "${DEBUG:=false}"
+: "${DOWNLOAD_DEFAULTS:=}"
 : "${DOWNLOAD_DEFAULT_CONFIGS:=}"
+: "${SKIP_DOWNLOAD_DEFAULTS:=false}"
+: "${APPLY_EXTRA_FILES:=${DOWNLOAD_EXTRA_CONFIGS:-}}"
 
 if isTrue "${REPLACE_ENV_IN_PLACE}"; then
   log "Replacing env variables in ${REPLACE_ENV_PATHS} that match the prefix '$REPLACE_ENV_VARIABLE_PREFIX' ..."
@@ -27,14 +30,38 @@ if isTrue "${REPLACE_ENV_IN_PLACE}"; then
     "${REPLACE_ENV_PATHS[@]}"
 fi
 
-if [[ $DOWNLOAD_DEFAULT_CONFIGS ]]; then
-  log "Downloading default configs, if needed"
-  if ! mc-image-helper mcopy \
-    --to /data/config \
-    --skip-existing --skip-up-to-date=false \
-    "$DOWNLOAD_DEFAULT_CONFIGS" 2> /dev/null; then
-    log "WARN: one or more default config files were not available from $DOWNLOAD_DEFAULT_CONFIGS"
+if isFalse "$SKIP_DOWNLOAD_DEFAULTS"; then
+  commonArgs=(
+    --skip-existing
+    --skip-up-to-date=false
+    --quiet-when-skipped
+    --ignore-missing-sources
+  )
+  if [[ $DOWNLOAD_DEFAULT_CONFIGS ]]; then
+    if ! mc-image-helper mcopy \
+      --to /data/config \
+      "${commonArgs[@]}" \
+      "$DOWNLOAD_DEFAULT_CONFIGS"; then
+      logWarning "One or more default config files were not available from $DOWNLOAD_DEFAULT_CONFIGS"
+    fi
   fi
+  if [[ $DOWNLOAD_DEFAULTS ]]; then
+    if ! mc-image-helper mcopy \
+      --to /data \
+      "${commonArgs[@]}" \
+      "$DOWNLOAD_DEFAULTS"; then
+      logWarning "One or more default files were not available from $DOWNLOAD_DEFAULTS"
+    fi
+  fi
+fi
+
+if [[ $APPLY_EXTRA_FILES ]]; then
+  mc-image-helper mcopy \
+    --to /data \
+    --skip-existing \
+    --skip-up-to-date=false \
+    --quiet-when-skipped \
+    "$APPLY_EXTRA_FILES"
 fi
 
 if [[ ${PATCH_DEFINITIONS} ]]; then
@@ -44,4 +71,4 @@ if [[ ${PATCH_DEFINITIONS} ]]; then
     "${PATCH_DEFINITIONS}"
 fi
 
-exec "${SCRIPTS:-/}start-setupRbac" "$@"
+exec "$(dirname "$0")/start-setupRbac" "$@"

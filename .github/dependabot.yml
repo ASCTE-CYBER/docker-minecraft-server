@@ -13,9 +13,15 @@ updates:
           - minor
   - package-ecosystem: pip
     directory: "/docs"
+    labels:
+      - dependencies
+      - documentation
     schedule:
       interval: weekly
     groups:
+      docker:
+        patterns:
+          - "docker/*"
       patches:
         patterns:
           - "*"
