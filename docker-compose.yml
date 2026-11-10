@@ -20,7 +20,8 @@ services:
       MOTD: "May the odds be ever in your favour..."
       PVP: "true"
       DIFFICULTY: "normal"
-      VERSION: 26.3
+      VERSION: "26.3"
+      JAVA_VERSION: "25"
       TYPE: "FABRIC"
       # MOD_PLATFORM: "modrinth"
       MODS_FILE: "mods.txt"
