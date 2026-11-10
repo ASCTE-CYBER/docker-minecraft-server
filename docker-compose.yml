@@ -9,7 +9,7 @@ services:
       - "25565:25565"
       - "25575:25575"
     volumes:
-      - data:/data
+      - club:/data
       - ./mods.txt:/data/mods.txt:ro
       - ./datapacks.txt:/data/datapacks.txt:ro
     environment:
@@ -27,17 +27,23 @@ services:
       MODS_FILE: "mods.txt"
       DATAPACKS_FILE: "datapacks.txt"
       REMOVE_OLD_DATAPACKS: "true"
-      # RCON_CMDS_FIRST_CONNECT:  |-
-      #   gamerule keepInventory true
-      #   scoreboard players set #CL_Time ClearLag 120
-      #   scoreboard players set rain_interval unusual-precipitation-config 123
-      #   gamerule healthOnSpawn 3
-      #   gamerule maxHealth 40
-      #   gamerule levelsPerHeart 5
-      #   scoreboard objectives add deaths deathCount
-      #   scoreboard objectives setdisplay list deaths
+      SPAWN_PROTECTION: "0"
+      MAX_PLAYERS: "30"
+      MAX_ENTITY_CRAMMING: "256"
+      SIMULATION_DISTANCE: "6"
+      VIEW_DISTANCE: "10"
+      RCON_CMDS_FIRST_CONNECT:  |-
+        scoreboard objectives add deaths deathCount
+        scoreboard objectives setdisplay list deaths
       RCON_PASSWORD: nabruh
       SNOOPER_ENABLED: "false"
     restart: unless-stopped
 volumes:
-  data: {}
+  club: {}
+
+#   gamerule keepInventory true
+#   scoreboard players set #CL_Time ClearLag 120
+#   scoreboard players set rain_interval unusual-precipitation-config 123
+#   gamerule healthOnSpawn 3
+#   gamerule maxHealth 40
+#   gamerule levelsPerHeart 5

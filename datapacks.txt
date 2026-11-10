@@ -1,4 +1,4 @@
 ## Datapacks for MC 26.3
 https://cdn.modrinth.com/data/aKeMRgHX/versions/riidlkuO/RandomMobSizes_datapack.zip?mr_download_reason=standalone
-https://cdn.modrinth.com/data/tL7ebxr2/versions/pxq7Hf5p/Super%20Enchants%201.5.5.zip?mr_download_reason=standalone
-https://cdn.modrinth.com/data/qqIrLnDt/versions/cen5zcIJ/%5B26.3%5Dwitherswrath-1.16.1.zip?mr_download_reason=standalone
+#https://cdn.modrinth.com/data/tL7ebxr2/versions/pxq7Hf5p/Super%20Enchants%201.5.5.zip?mr_download_reason=standalone
+#https://cdn.modrinth.com/data/qqIrLnDt/versions/cen5zcIJ/%5B26.3%5Dwitherswrath-1.16.1.zip?mr_download_reason=standalone
