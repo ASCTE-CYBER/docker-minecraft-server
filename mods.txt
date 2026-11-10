@@ -3,6 +3,6 @@
 https://cdn.modrinth.com/data/P7dR8mSH/versions/998R2rNP/fabric-api-0.166.0%2B26.3.jar?mr_download_reason=standalone&mr_loader=fabric
 https://cdn.modrinth.com/data/uXXizFIs/versions/d5ddUdiB/ferritecore-9.0.0-fabric.jar?mr_download_reason=standalone&mr_loader=fabric
 https://cdn.modrinth.com/data/gvQqBUqZ/versions/fWv5bnZk/lithium-fabric-0.26.3%2Bmc26.3.jar?mr_download_reason=standalone&mr_loader=fabric
-https://cdn.modrinth.com/data/4Ywm3d1c/versions/Or9vuzmp/simple-warp-tpa-home-back-26.2.3-1.4.jar?mr_download_reason=standalone  # requires configuration
+https://cdn.modrinth.com/data/4Ywm3d1c/versions/OPu4idjS/simple-warp-tpa-home-back-26.3-1.3.jar?mr_download_reason=standalone
 https://cdn.modrinth.com/data/ILMYHSRT/versions/dvjZDTum/disable-end-portals-1.0.2%2B26.1-.jar?mr_download_reason=standalone  # requires configuration
 
