@@ -35,9 +35,8 @@ services:
       RCON_CMDS_FIRST_CONNECT:  |-
         scoreboard objectives add deaths deathCount
         scoreboard objectives setdisplay list deaths
-        gamerule disable_end true
-        gamerule disable_nether false
-        gamerule disable_gateway false
+        end close
+        nether open
       RCON_PASSWORD: nabruh
       SNOOPER_ENABLED: "false"
     restart: unless-stopped

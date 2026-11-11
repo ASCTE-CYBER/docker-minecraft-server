@@ -9,8 +9,10 @@ https://cdn.modrinth.com/data/5EtGIMjO/versions/vzbpJiuM/logblock-1.0.6.jar?mr_d
 # open inventory
 https://cdn.modrinth.com/data/CJ1sB5q4/versions/ArAMvcKT/Open-inv-1.5.1.jar?mr_download_reason=standalone&mr_loader=paper
 # world edit + world guard (both disabled)
-https://cdn.modrinth.com/data/z4HZZnLr/versions/JOyEqKdC/FastAsyncWorldEdit-Paper-2.16.2.jar?mr_download_reason=standalone
+https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.jar?mr_download_reason=standalone
 https://cdn.modrinth.com/data/DKY9btbd/versions/fiHLM6oY/worldguard-bukkit-7.0.21.jar?mr_download_reason=standalone
+#https://cdn.modrinth.com/data/z4HZZnLr/versions/JOyEqKdC/FastAsyncWorldEdit-Paper-2.16.2.jar?mr_download_reason=standalone
+#https://cdn.modrinth.com/data/DKY9btbd/versions/TtfwTyi6/worldguard-bukkit-7.0.19.jar?mr_download_reason=standalone
 
 ## Modrinth - Fabric Mods for MC 26.3
 # # dependencies & optimizations
