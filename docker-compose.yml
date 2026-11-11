@@ -22,19 +22,22 @@ services:
       DIFFICULTY: "normal"
       VERSION: "26.3"
       JAVA_VERSION: "25"
-      TYPE: "FABRIC"
+      TYPE: "PAPER"
       # MOD_PLATFORM: "modrinth"
       MODS_FILE: "mods.txt"
       DATAPACKS_FILE: "datapacks.txt"
       REMOVE_OLD_DATAPACKS: "true"
       SPAWN_PROTECTION: "0"
       MAX_PLAYERS: "30"
-      MAX_ENTITY_CRAMMING: "256"
+      MAX_ENTITY_CRAMMING: "128"
       SIMULATION_DISTANCE: "6"
       VIEW_DISTANCE: "10"
       RCON_CMDS_FIRST_CONNECT:  |-
         scoreboard objectives add deaths deathCount
         scoreboard objectives setdisplay list deaths
+        gamerule disable_end true
+        gamerule disable_nether false
+        gamerule disable_gateway false
       RCON_PASSWORD: nabruh
       SNOOPER_ENABLED: "false"
     restart: unless-stopped
