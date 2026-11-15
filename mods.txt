@@ -13,6 +13,8 @@ https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.
 https://cdn.modrinth.com/data/DKY9btbd/versions/fiHLM6oY/worldguard-bukkit-7.0.21.jar?mr_download_reason=standalone
 #https://cdn.modrinth.com/data/z4HZZnLr/versions/JOyEqKdC/FastAsyncWorldEdit-Paper-2.16.2.jar?mr_download_reason=standalone
 #https://cdn.modrinth.com/data/DKY9btbd/versions/TtfwTyi6/worldguard-bukkit-7.0.19.jar?mr_download_reason=standalone
+# kick afk
+https://cdn.modrinth.com/data/QlG6RUBh/versions/kOe5Uh7R/AntiAFK-1.0.2-ccca2f4.jar?mr_download_reason=standalone&mr_loader=paper
 
 ## Modrinth - Fabric Mods for MC 26.3
 # # dependencies & optimizations
