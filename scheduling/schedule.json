@@ -1,0 +1,52 @@
+
+{
+  "timezone": "Central Standard Time",
+  "days": {
+    "Monday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "15:15", "stop": "17:00" },
+        { "start": "20:30", "stop": "22:30" }
+      ]
+    },
+    "Tuesday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "15:15", "stop": "17:00" },
+        { "start": "20:30", "stop": "22:30" }
+      ]
+    },
+    "Wednesday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "15:15", "stop": "17:00" },
+        { "start": "20:30", "stop": "22:30" }
+      ]
+    },
+    "Thursday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "15:15", "stop": "17:00" },
+        { "start": "20:30", "stop": "22:30" }
+      ]
+    },
+    "Friday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "13:00", "stop": "23:58" }
+      ]
+    },
+    "Saturday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "06:00", "stop": "23:58" }
+      ]
+    },
+    "Sunday": {
+      "enabled": true,
+      "schedule": [
+        { "start": "06:00", "stop": "23:58" }
+      ]
+    }
+  }
+}

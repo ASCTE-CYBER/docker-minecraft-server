@@ -40,7 +40,28 @@ services:
         nether open
       RCON_PASSWORD: nabruh
       SNOOPER_ENABLED: "false"
-    restart: unless-stopped
+    restart: always
+
+  backups:
+    image: itzg/mc-backup
+    container_name: minecraft-backups
+    restart: always
+    depends_on:
+      - mc
+    environment:
+      BACKUP_METHOD: tar
+      BACKUP_NAME: minecraft
+      RCON_HOST: mc
+      RCON_PASSWORD: nabruh
+      # configure daily backup at 4pm "16:00"
+      CRON_SCHEDULE: "0 16 * * *"
+      PRUNE_BACKUPS_DAYS: 10
+      TZ: America/Chicago
+    volumes:
+      - .club:/data:ro
+      - ./minecraft-backups:/backups
+      - /etc/localtime:/etc/localtime:ro
+
 volumes:
   club: {}
 
