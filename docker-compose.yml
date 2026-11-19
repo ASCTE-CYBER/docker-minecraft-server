@@ -9,7 +9,7 @@ services:
       - "25565:25565"
       - "25575:25575"
     volumes:
-      - club:/data
+      - ./data:/data
       - ./mods.txt:/data/mods.txt:ro
       - ./datapacks.txt:/data/datapacks.txt:ro
     environment:
@@ -29,6 +29,9 @@ services:
       REMOVE_OLD_DATAPACKS: "true"
       SPAWN_PROTECTION: "0"
       ENABLE_WHITELIST: "true"
+      # WHITELIST_FILE: "whitelist.json"
+      # OVERRIDE_WHITELIST: "true"
+      # EXISTING_WHITELIST_FILE: "SKIP"
       MAX_PLAYERS: "30"
       MAX_ENTITY_CRAMMING: "128"
       SIMULATION_DISTANCE: "6"
@@ -58,12 +61,10 @@ services:
       PRUNE_BACKUPS_DAYS: 10
       TZ: America/Chicago
     volumes:
-      - .club:/data:ro
+      - ./data:/data:ro
       - ./minecraft-backups:/backups
       - /etc/localtime:/etc/localtime:ro
 
-volumes:
-  club: {}
 
 #   gamerule keepInventory true
 #   scoreboard players set #CL_Time ClearLag 120
