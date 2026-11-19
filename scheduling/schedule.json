@@ -19,14 +19,14 @@
     "Wednesday": {
       "enabled": true,
       "schedule": [
-        { "start": "15:15", "stop": "17:00" },
+        { "start": "16:15", "stop": "17:00" },
         { "start": "20:30", "stop": "22:30" }
       ]
     },
     "Thursday": {
       "enabled": true,
       "schedule": [
-        { "start": "15:15", "stop": "17:00" },
+        { "start": "16:15", "stop": "17:00" },
         { "start": "20:30", "stop": "22:30" }
       ]
     },

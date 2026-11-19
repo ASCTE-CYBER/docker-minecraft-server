@@ -6,3 +6,4 @@
 personal-build-and-develop.*
 *.code-workspace
 site/
+*.log
